@@ -22,27 +22,28 @@ Các lưu ý dành cho team nhé:
      + git pull origin frontend (Cả 2 bạn đều làm bước này trước khi code)
        
    🤦‍♂️Vd bạn K làm xong trang login.php
-     + git checkout -b frontend/login
-     + git add frontend/login.php
+     + git checkout -b frontend_login
+     + git add <tên file hoạc đường dẫn file nếu nằm trong thư mục>
      + git commit -m"Tạo giao diện trang login.php"
-     + git push origin frontend/home
+     + git push origin frontend_login
        
    🤦‍♂️Vd bạn L làm xong trang register.php
-     + git checkout -b frontend/register
-     + git add frontend/register.php
+     + git checkout -b frontend_register
+     + git add <tên file hoạc đường dẫn file nếu nằm trong thư mục>
      + git commit -m"Tạo giao diện trang register.php"
-     + git push origin frontend/register
+     + git push origin frontend_register
        
    🫡Sau khi push xong có 2 nhánh 2 file đó bạn L sẽ có nhiệm vụ như sau để merge lại
    
      + git checkout frontend
      + git pull origin frontend
      #  Merge nhánh login trước
-     + git merge frontend/login
+     + git merge frontend_login
      + Nếu không có conflict → OK
      #  Merge nhánh register tiếp
-     + git merge frontend/register
+     + git merge frontend_register
      + Nếu không có conflict → OK
+     😤😤😤Ở trường hợp này sẽ xuất hiện mọt cái bảng soạn thảo VIM. nếu ko có thay đổi gì thì bấm esc -> :wq để thoát😤😤😤  
      # Push lại nhánh frontend đã được gộp đủ
      + git push origin frontend
        

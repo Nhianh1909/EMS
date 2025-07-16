@@ -38,6 +38,7 @@ Các lưu ý dành cho team nhé:
      + Nếu không có conflict → OK
      # Push lại nhánh frontend đã được gộp đủ
      + git push origin frontend
+       
    📝📝📝📝📝📝📝📝LƯU Ý📝📝📝📝📝📝📝📝📝📝📝
    📝 - TEAM FRONTEND LÀM XONG FILE NÀO THÌ PHẢI PUSH LÊN FILE ĐÓ VÀ BẠN L SẼ CÓ TRÁCH NHIỆM MERGE LẠI TOÀN BỘ FRONTEND SAU KHI PUSH
    📝 QUY TRÌNH MERGE NHƯ SAU:

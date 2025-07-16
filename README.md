@@ -19,16 +19,16 @@ Các lưu ý dành cho team nhé:
    
    # Về team frontend
      + git checkout frontend
-     + git pull origin frontend (Cả 2 bạn đều làm bước này trước khi code)
+     + git pull origin frontend (Cả 2 bạn đều làm bước này trước khi code) (bước này kt xem có thay đổi gì ko. Nếu hiện already up to date thì oke)
        
    🤦‍♂️Vd bạn K làm xong trang login.php
-     + git checkout -b frontend_login
+     + git checkout -b frontend_login (tạo nhánh khác)
      + git add <tên file hoạc đường dẫn file nếu nằm trong thư mục>
      + git commit -m"Tạo giao diện trang login.php"
      + git push origin frontend_login
        
    🤦‍♂️Vd bạn L làm xong trang register.php
-     + git checkout -b frontend_register
+     + git checkout -b frontend_register (tạo nhánh khác)
      + git add <tên file hoạc đường dẫn file nếu nằm trong thư mục>
      + git commit -m"Tạo giao diện trang register.php"
      + git push origin frontend_register
@@ -43,10 +43,13 @@ Các lưu ý dành cho team nhé:
      #  Merge nhánh register tiếp
      + git merge frontend_register
      + Nếu không có conflict → OK
-     😤😤😤Ở trường hợp này sẽ xuất hiện mọt cái bảng soạn thảo VIM. nếu ko có thay đổi gì thì bấm esc -> :wq để thoát😤😤😤  
+       
+     😤😤😤Ở trường hợp này sẽ xuất hiện mọt cái bảng soạn thảo VIM. nếu ko có thay đổi gì thì bấm esc -> :wq để thoát😤😤😤
+
      # Push lại nhánh frontend đã được gộp đủ
      + git push origin frontend
-       
+     + Sau đó lên git ktra nhé  
+     
    📝📝📝📝📝📝📝📝LƯU Ý📝📝📝📝📝📝📝📝📝📝📝
    
    📝 - TEAM FRONTEND LÀM XONG FILE NÀO THÌ PHẢI PUSH LÊN FILE ĐÓ VÀ BẠN L SẼ CÓ TRÁCH NHIỆM MERGE LẠI  
@@ -58,24 +61,27 @@ Các lưu ý dành cho team nhé:
    📝+ git merge frontend/login   
    📝+ git merge frontend/register  
    📝+ git push origin frontend  
+   📝NHỚ LÊN GIT VỪA LÀM VỪA KT NHÉ  
    📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝  
 
 
     # Team backend
     - Đầu tiên, để backend có những file mà frontend đã merge, bạn cần merge nhánh frontend vào backend:
-      + git checkout backend
-      + git pull origin backend
-      + git merge origin/frontend   # ⚠️ Chỉ cần merge 1 lần này
+      + git checkout backend  
+      + git pull origin backend  
+      + git merge origin/frontend   # ⚠️ Chỉ cần 1 người merge 1 lần này để có tất nhánh frontend  
+        
     🤦‍♂️Vd bạn A làm xong chức năng trang login.php
-     + git checkout -b backend/HandleLogin
-     + git add (đường dẫn file vừa mới sửa)
-     + git commit -m"thêm chức năng trang login"
+     + git checkout -b backend_HandleLogin(tạo nhánh mới)  
+     + git add (đường dẫn file vừa mới sửa. Nếu 1 file thì chỉ cần ghi 1 file)    
+     + git commit -m"thêm chức năng trang login"  
      + git push origin backend/HandleLogin
-   🤦‍♂️Vd bạn C làm xong trang register.php
-     + git checkout -b backend/HandleRegister
-     + git add (đường dẫn file vừa mới sửa)
-     + git commit -m"thêm chức năng trang register"
-     + git push origin backend/HandleRegister  
+       
+   🤦‍♂️Vd bạn C làm xong trang register.php  
+     + git checkout -b backend_HandleRegister(tạo nhánh khác)  
+     + git add (đường dẫn file vừa mới sửa hoặc tên file nếu chỉ có 1 file)  
+     + git commit -m"thêm chức năng trang register"  
+     + git push origin backend_HandleRegister     
    📝📝📝📝📝📝📝📝LƯU Ý📝📝📝📝📝📝📝📝📝📝📝  
    📝  TEAM BACKEND LÀM XONG FILE NÀO THÌ PHẢI PUSH LÊN FILE ĐÓ VÀ BẠN A SẼ CÓ TRÁCH NHIỆM MERGE LẠI TOÀN BỘ BACKEND SAU KHI PUSH  
    📝 QUY TRÌNH MERGE NHƯ SAU:  
@@ -87,20 +93,20 @@ Các lưu ý dành cho team nhé:
    📝+ git push origin backend  
    📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝📝  
 
-    #Bước kiểm tra sản phẩm và chức năng (Bước này chỉ có Antony và C test)
-   - Sau khi 2 team đã làm xong 2 giao diện và 2 chức năng của giao diện đó thì Antony sẽ test xem đã đúng luồng chưa
-     # Bắt đầu từ main để tạo base
+    # Bước kiểm tra sản phẩm và chức năng (Bước này chỉ có Antony và C test)
+      Sau khi 2 team đã làm xong 2 giao diện và 2 chức năng của giao diện đó thì Antony sẽ test xem đã đúng luồng chưa  
+     # Bắt đầu từ main để tạo base  
         git checkout main
-        git pull origin main
+        git pull origin main (kt xem có sự thay đổi gì ko)  
      # Tạo nhánh test để gộp frontend và backend lại 
-        git checkout -b integration-test
-        git branch (để xem đang nhánh nào)
+        git checkout -b test  
+        git branch (để xem đang nhánh nào)  
      # Merge nhánh frontend
-        git merge origin/frontend
+        git merge origin/frontend  
      # Merge nhánh backend
-        git merge origin/backend
+        git merge origin/backend  
      # Nếu có xung đột tính sau
-     git push origin integration-test
+     git push origin test  
 
 
        

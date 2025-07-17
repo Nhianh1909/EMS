@@ -1,2 +1,2 @@
 <?php
-echo 'xin chao, toi là bạn K test git nhánh frontend';
+echo 'xin chao, toi là bạn thầy truyền test git nhánh frontend';

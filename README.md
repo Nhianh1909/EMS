@@ -101,12 +101,26 @@ Các lưu ý dành cho team nhé:
      # Tạo nhánh test để gộp frontend và backend lại 
         git checkout -b test  
         git branch (để xem đang nhánh nào)  
+     # Kiểm tra xem ai đã chỉnh sửa file nào  
+        git blame <tên file>
+     # Xem toàn bộ lịch sử của một file
+        git log <tên-file>
+     # Kiểm tra nhánh nào đã merge vào nhánh hiện tại
+        git log --merges
+     # Kiểm tra xem có sự khác biệt nào giữa 2 nhánh
+        git diff frontend..backend (vd)
+     # Kiểm tra conflict trước khi merge  
+        git fetch origin (lấy toàn bộ nhánh mới nhất từ remote nhưng ko tự động merge vào nhánh hiện tại)
+        git checkout frontend (chuyển nhánh muốn kiểm tra)
+        git merge backend --no-commit --no-ff (Thứ merge backend vào frontend)
+        Nếu test xong oke thì git commit...
+        Nếu muốn hủy merge mà chưa muốn gộp thì git merge --abort  
      # Merge nhánh frontend
         git merge origin/frontend  
      # Merge nhánh backend
         git merge origin/backend  
      # Nếu có xung đột tính sau
-     git push origin test  
+        git push origin test  
 
 
        

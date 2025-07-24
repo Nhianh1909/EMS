@@ -60,6 +60,9 @@ error_reporting(E_ALL);
                 <p class="auth-switch-link">
                     Chưa có tài khoản? <a href="register.php">Tạo tài khoản ngay</a>
                 </p>
+                <p>
+                    em lieu 2k4
+                </p>
             </div>
         </div>
     </div>

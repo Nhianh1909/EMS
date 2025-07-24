@@ -99,7 +99,7 @@ Các lưu ý dành cho team nhé:
      # Merge nhánh backend
         git merge origin/backend
      # Nếu có xung đột tính sau
-     git push origin integration-test
+        git push origin integration-test
 
 
        

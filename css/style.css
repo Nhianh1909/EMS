@@ -1,0 +1,210 @@
+/* * CSS chung cho cả trang Đăng nhập (Login) và Đăng ký (Register)
+ */
+
+/* Thiết lập cơ bản và font chữ */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Container chính bao bọc cả 2 phần */
+.auth-container {
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    overflow: hidden;
+    width: 1000px;
+    max-width: 95%;
+    min-height: 600px;
+}
+
+/* --- Phần bên trái (Ảnh minh họa) --- */
+.auth-left-panel {
+    background-color: #e0f7fa; /* Màu xanh nhạt */
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+}
+
+.auth-left-panel .auth-illustration {
+    max-width: 90%;
+    height: auto;
+    display: block;
+}
+
+/* --- Phần bên phải (Form) --- */
+.auth-right-panel {
+    padding: 40px;
+    flex: 1.2; /* Cho phần form rộng hơn một chút */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-form-wrapper {
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-title {
+    font-size: 2.5em;
+    font-weight: 600;
+    color: #1a237e; /* Màu xanh đậm */
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.auth-subtitle {
+    font-size: 1em;
+    color: #555;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* --- Form và các thành phần bên trong --- */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    background-color: #f7f7f7;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 5px 15px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group:focus-within {
+    border-color: #3f51b5;
+    box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+}
+
+.form-group .form-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 15px;
+    opacity: 0.5;
+}
+
+.form-group input {
+    border: none;
+    background: transparent;
+    padding: 15px 0;
+    font-size: 1em;
+    font-family: 'Poppins', sans-serif;
+    width: 100%;
+    outline: none;
+}
+
+.form-group input::placeholder {
+    color: #999;
+}
+
+/* Các tùy chọn như "Remember me", "Forgot password" */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    font-size: 0.9em;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+}
+
+.remember-me input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.remember-me label {
+    color: #555;
+    cursor: pointer;
+}
+
+.forgot-password {
+    color: #3f51b5;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* Nút bấm chính (Sign In / Register) */
+.auth-button {
+    background: linear-gradient(90deg, #3f51b5, #5c6bc0);
+    color: white;
+    padding: 15px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    transition: box-shadow 0.3s, transform 0.2s;
+    box-shadow: 0 4px 15px rgba(63, 81, 181, 0.3);
+}
+
+.auth-button:hover {
+    box-shadow: 0 6px 20px rgba(63, 81, 181, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Link chuyển đổi giữa các trang */
+.auth-switch-link {
+    text-align: center;
+    margin-top: 30px;
+    color: #555;
+    font-size: 0.9em;
+}
+
+.auth-switch-link a {
+    color: #3f51b5;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-switch-link a:hover {
+    text-decoration: underline;
+}
+
+/* CSS cho trang Đăng ký (Register) - Thêm các trường cần thiết */
+.register-form .form-group {
+    margin-bottom: 15px; /* Giảm khoảng cách cho form nhiều trường hơn */
+}
+
+/* Responsive Design cho thiết bị di động */
+@media (max-width: 992px) {
+    .auth-container {
+        flex-direction: column;
+        width: 100%;
+        max-width: 500px;
+        min-height: auto;
+        margin: 20px;
+    }
+
+    .auth-left-panel {
+        display: none; /* Ẩn ảnh trên mobile để tập trung vào form */
+    }
+
+    .auth-right-panel {
+        flex: 1;
+    }
+}

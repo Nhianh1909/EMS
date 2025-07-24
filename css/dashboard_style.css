@@ -6,7 +6,7 @@
     --main-bg: #f7f8fc;
     --text-primary: #1a202c;
     --text-secondary: #718096;
-    --card-bg: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.9); /* Làm thẻ hơi trong suốt để thấy nền */
     --border-color: #e2e8f0;
     --income-color: #22c55e;
     --expense-color: #ef4444;
@@ -136,7 +136,7 @@ body {
     position: relative; /* Cần thiết cho pseudo-element ::before */
 }
 
-/* === HIỆU ỨNG NỀN LUNG LINH === */
+/* === HIỆU ỨNG NỀN LUNG LINH (NÂNG CẤP) === */
 .main-content::before {
     content: '';
     position: absolute;
@@ -144,21 +144,23 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 25% 25%, rgba(74, 108, 247, 0.1), transparent 40%),
-                radial-gradient(circle at 75% 75%, rgba(168, 85, 247, 0.1), transparent 40%);
-    background-size: 200% 200%;
-    animation: shimmer 15s ease-in-out infinite;
-    z-index: -1; /* Đảm bảo nền nằm dưới nội dung */
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(74, 108, 247, 0.2), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(168, 85, 247, 0.2), transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(0, 204, 255, 0.15), transparent 50%);
+    background-size: 250% 250%;
+    animation: fluidGradient 20s ease-in-out infinite alternate;
+    z-index: 0; /* Đảm bảo nền nằm dưới nội dung */
 }
 
-@keyframes shimmer {
-    0% { background-position: 0% 0%; }
-    50% { background-position: 100% 100%; }
-    100% { background-position: 0% 0%; }
+@keyframes fluidGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 
-.main-header, .overview-cards, .main-section, .transactions-page-container, .reports-grid, .accounts-summary-card, .accounts-grid, .budgets-grid {
+.main-header, .overview-cards, .main-section, .transactions-page-container, .reports-grid, .accounts-summary-card, .accounts-grid, .budgets-grid, .profile-settings-container {
     position: relative; /* Đảm bảo nội dung nằm trên hiệu ứng nền */
     z-index: 1;
 }
@@ -810,86 +812,52 @@ body {
     animation: spinIn 1s ease-out forwards;
 }
 
-/* === CSS BỔ SUNG CHO TRANG TÀI KHOẢN === */
+/* === CSS BỔ SUNG CHO TRANG TÀI KHOẢN (PROFILE SETTINGS) === */
 
-.accounts-summary-card {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 25px;
-    border-radius: 12px;
-    margin-bottom: 30px;
-}
-
-.accounts-summary-card p {
-    font-size: 16px;
-    opacity: 0.8;
-    margin-bottom: 5px;
-}
-
-.accounts-summary-card h2 {
-    font-size: 32px;
-    font-weight: 700;
-}
-
-.accounts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.account-card {
+.profile-settings-container {
     background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 20px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.account-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-}
-
-.account-card-header {
+    border: 1px solid var(--border-color);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    gap: 30px;
+    padding: 30px;
 }
 
-.account-card-icon {
-    width: 45px;
-    height: 45px;
+.avatar-section {
+    flex-basis: 200px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.large-avatar {
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+    margin-bottom: 15px;
 }
 
-.account-card-icon i {
-    font-size: 22px;
+.profile-form {
+    flex-grow: 1;
 }
 
-.account-card-type {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
+.form-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 25px 0;
+}
+
+.form-group-modal input[readonly] {
     background-color: #f1f5f9;
-    padding: 4px 8px;
-    border-radius: 6px;
+    cursor: not-allowed;
+    color: var(--text-secondary);
 }
 
-.account-card-body .account-card-name {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 5px;
-}
-
-.account-card-body .account-card-balance {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--text-primary);
+.form-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 25px;
 }
 
 /* === CSS BỔ SUNG CHO TRANG NGÂN SÁCH === */

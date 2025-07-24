@@ -123,6 +123,8 @@ Các lưu ý dành cho team nhé:
         git push origin test
      # Note thêm: lệnh xóa nhánh trong local
         git branch -D <nhánh>
+        git status
+        git log --oneline --decorate --graph
 
 
        

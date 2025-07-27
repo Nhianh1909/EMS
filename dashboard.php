@@ -1,8 +1,25 @@
 <?php
-// --- MÔ PHỎNG DỮ LIỆU ĐỘNG ---
-// Dọn dẹp dữ liệu đầu vào để tránh lỗi
-$userName = trim(" Khánh"); 
-$userEmail = "duykhanh@gmail.com";
+$host = 'localhost';$dbname = 'ems';$username = 'root';$password = '';
+// Kết nối đến cơ sở dữ liệu
+try {
+    $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Kết nối thất bại: " . $e->getMessage());
+}
+
+session_start();
+if (!isset($_SESSION['email'])) {
+    header("Location: login.php");
+    exit();
+}
+// Lấy thông tin người dùng 
+$sql_info = "SELECT * FROM users WHERE email = :email";
+$stmt = $conn->prepare($sql_info);
+$stmt->execute(['email' => $_SESSION['email']]);
+$user_info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
 
 // Dữ liệu tổng quan
 $balance = 25680000;
@@ -49,9 +66,9 @@ $spending_analysis = [
         </div>
 
         <div class="sidebar-profile">
-            <img src="https://scontent.fsgn21-1.fna.fbcdn.net/v/t39.30808-6/474189628_1310277973503688_3036333816967852750_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hMqcP2MP3hMQ7kNvwEysxR9&_nc_oc=AdmRy2aZYjM-Q9iwxXPO7EnyU9y8I4N4-r31oBvb1bv3Yc0YYB1M-VXyn56PtGCFM2AaUSbYKZBD2yLKF6QUMmWa&_nc_zt=23&_nc_ht=scontent.fsgn21-1.fna&_nc_gid=2VfzLP0HwXXmY6gmfFxWqw&oh=00_AfRS2AS7qmPGz9dSe3jvA1Tx5pWDZOF9KwbBA6Q7rky9vg&oe=687D3C9E" alt="Avatar" class="profile-avatar">
-            <h4 class="profile-name"><?php echo htmlspecialchars($userName); ?></h4>
-            <p class="profile-email"><?php echo htmlspecialchars($userEmail); ?></p>
+            <img src="https://i.pravatar.cc/100" alt="Avatar" class="profile-avatar">
+            <h4 class="profile-name"><?php echo htmlspecialchars($user_info['username']); ?></h4>
+            <p class="profile-email"><?php echo htmlspecialchars($user_info['email']); ?></p>
         </div>
 
         <nav class="sidebar-nav">
@@ -68,8 +85,12 @@ $spending_analysis = [
             </ul>
         </nav>
 
+        
         <div class="sidebar-footer">
-            <a href="login.php" class="logout-button"><i class='bx bx-log-out'></i><span>Đăng xuất</span></a>
+            <a href="logout.php" class="logout-button text-decoration-none">
+                <i class='bx bx-log-out'></i>
+                <span>Đăng xuất</span>
+            </a>
         </div>
     </aside>
 

@@ -10,61 +10,86 @@ error_reporting(E_ALL);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập</title>
-    <!-- Link tới file CSS chung -->
+
+    <!-- Bootstrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- CSS riêng -->
     <link rel="stylesheet" href="css/style.css">
-    <!-- Link tới Google Fonts để có font đẹp hơn -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body, html {
+            height: 100%;
+        }
+        .auth-container {
+            display: flex;
+            height: 100vh;
+        }
+        .auth-left-panel {
+            background-color: #f8f9fa;
+        }
+        .auth-left-panel img {
+            max-width: 100%;
+            max-height: 80%;
+            object-fit: contain;
+            padding: 20px;
+        }
+        .auth-form-wrapper {
+            max-width: 400px;
+            width: 100%;
+            padding: 30px;
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-container">
-        <!-- Phần bên trái chứa ảnh minh họa -->
-        <div class="auth-left-panel">
-            <img src="https://placehold.co/500x500/E0F7FA/333333?text=Hinh+Minh+Hoa\n(login-illustration.svg)" alt="Hình minh họa Đăng nhập" class="auth-illustration">
-        </div>
 
-        <!-- Phần bên phải chứa form đăng nhập -->
-        <div class="auth-right-panel">
-            <div class="auth-form-wrapper">
-                <h2 class="auth-title">Sign In</h2>
-                <p class="auth-subtitle">Chào mừng trở lại! Vui lòng nhập thông tin của bạn.</p>
-                
-                <form class="auth-form" action="#" method="POST">
-                    <!-- Nhóm nhập liệu cho Email -->
-                    <div class="form-group">
-                        <img src="https://placehold.co/24x24/FFFFFF/999999?text=✉️" alt="Mail Icon" class="form-icon">
-                        <input type="email" name="email" placeholder="Nhập Email của bạn" required>
+<div class="auth-container">
+    <!-- Panel trái -->
+    <div class="auth-left-panel d-none d-md-flex col-md-6 justify-content-center align-items-center">
+        <img src="./assets/login_avatar.jpg" alt="Login Illustration">
+    </div>
+
+    <!-- Panel phải -->
+    <div class="auth-right-panel col-12 col-md-6 d-flex justify-content-center align-items-center">
+        <div class="auth-form-wrapper">
+            <h2 class="auth-title">Sign In</h2>
+            <p class="auth-subtitle">Chào mừng trở lại! Vui lòng nhập thông tin của bạn.</p>
+
+            <form class="auth-form" action="login_check.php" method="POST" autocomplete="on">
+                <!-- Email -->
+                <div class="form-group d-flex align-items-center mb-3">
+                    <img src="https://placehold.co/24x24/FFFFFF/999999?text=✉️" alt="Email Icon" class="me-2">
+                    <input type="email" name="email" class="form-control" placeholder="Nhập Email của bạn" required>
+                </div>
+
+                <!-- Mật khẩu -->
+                <div class="form-group d-flex align-items-center mb-3">
+                    <img src="https://placehold.co/24x24/FFFFFF/999999?text=🔒" alt="Password Icon" class="me-2">
+                    <input type="password" name="password" class="form-control" placeholder="Nhập Mật khẩu" required>
+                </div>
+
+                <!-- Ghi nhớ -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" id="remember" name="remember" class="form-check-input">
+                        <label for="remember" class="form-check-label">Ghi nhớ tôi</label>
                     </div>
+                    <a href="#" class="text-decoration-none">Quên mật khẩu?</a>
+                </div>
 
-                    <!-- Nhóm nhập liệu cho Mật khẩu -->
-                    <div class="form-group">
-                        <img src="https://placehold.co/24x24/FFFFFF/999999?text=🔒" alt="Password Icon" class="form-icon">
-                        <input type="password" name="password" placeholder="Nhập Mật khẩu" required>
-                    </div>
+                <!-- Nút đăng nhập -->
+                <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+            </form>
 
-                    <!-- Tùy chọn Ghi nhớ đăng nhập và Quên mật khẩu -->
-                    <div class="form-options">
-                        <div class="remember-me">
-                            <input type="checkbox" id="remember">
-                            <label for="remember">Ghi nhớ tôi</label>
-                        </div>
-                        <a href="#" class="forgot-password">Quên mật khẩu?</a>
-                    </div>
-
-                    <!-- Nút Đăng nhập -->
-                    <button type="submit" class="auth-button">Sign In</button>
-                </form>
-
-                <!-- Link chuyển sang trang Đăng ký (ĐÃ CẬP NHẬT) -->
-                <p class="auth-switch-link">
-                    Chưa có tài khoản? <a href="register.php">Tạo tài khoản ngay</a>
-                </p>
-                <p>
-                    em lieu 2k4
-                </p>
-            </div>
+            <p class="text-center mt-3">
+                Chưa có tài khoản? <a href="register.php">Tạo tài khoản ngay</a>
+            </p>
         </div>
     </div>
+</div>
+
 </body>
 </html>

@@ -1,13 +1,5 @@
 <?php
-$host = 'localhost';$dbname = 'ems';$username = 'root';$password = '';
-// Kết nối đến cơ sở dữ liệu
-try {
-    $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Kết nối thất bại: " . $e->getMessage());
-}
-
+include 'config/config.php';
 session_start();
 if (!isset($_SESSION['email'])) {
     header("Location: login.php");
@@ -100,7 +92,7 @@ $spending_analysis = [
         <header class="main-header">
             <div class="header-left">
                 <h1>Bảng điều khiển</h1>
-                <p class="welcome-message">Chào mừng trở lại, <?php echo htmlspecialchars($userName); ?>! 👋</p>
+                <p class="welcome-message">Chào mừng trở lại, <?php echo htmlspecialchars($user_info['username']); ?>! 👋</p>
             </div>
             <div class="header-right">
                 <div class="search-bar">

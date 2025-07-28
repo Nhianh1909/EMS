@@ -120,11 +120,15 @@ Các lưu ý dành cho team nhé:
      # Merge nhánh backend
         git merge origin/backend  
      # Nếu có xung đột tính sau
+<<<<<<< .merge_file_xnk2EW
         git push origin test
      # Note thêm: lệnh xóa nhánh trong local
         git branch -D <nhánh>
         git status
         git log --oneline --decorate --graph
+=======
+        git push origin integration-test
+>>>>>>> .merge_file_VMwFGl
 
 
        

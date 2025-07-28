@@ -1,5 +1,5 @@
 <?php
-error_reporting(0);
+error_reporting(E_ALL);
 session_start();
 
 
@@ -11,13 +11,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Truy vấn để kiểm tra thông tin đăng nhập
     $stmt = $conn->prepare("SELECT * FROM users WHERE email = :email AND password = :password");
-    $stmt->bindParam(':email', $email);
-    $stmt->bindParam(':password', $password);
-    $stmt->execute();
+    $stmt->execute(['email' => $email, 'password' => $password]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if($stmt->rowCount() > 0) {
         // Đăng nhập thành công
-        $_SESSION['email'] = $email;
+        $_SESSION['user_id'] = $user['id'];
         header("Location: dashboard.php");
         exit();
     } else {

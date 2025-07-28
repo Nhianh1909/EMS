@@ -3,10 +3,21 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+include('config/config.php');
+session_start();
 
-// --- MÔ PHỎNG DỮ LIỆU ĐỘNG ---
-$userName = trim(" Khánh");
-$userEmail = "duykhanh@gmail.com";
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit();
+}
+
+$sql_info = $conn->prepare('SELECT * FROM users WHERE id = :id');
+$sql_info->execute(['id' => $_SESSION['user_id']]);
+$user_info = $sql_info->fetch(PDO::FETCH_ASSOC);
+
+
+
+
 
 // Dữ liệu mẫu cho các ngân sách
 $budgets = [
@@ -35,33 +46,7 @@ $budgets = [
 
 <div class="dashboard-container">
     <!-- ========== SIDEBAR ========== -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <i class='bx bxs-wallet-alt logo-icon'></i>
-            <span class="logo-text">MyWallet</span>
-        </div>
-        <div class="sidebar-profile">
-            <img src="https://scontent.fsgn21-1.fna.fbcdn.net/v/t39.30808-6/474189628_1310277973503688_3036333816967852750_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=833d8c&_nc_ohc=hMqcP2MP3hMQ7kNvwEysxR9&_nc_oc=AdmRy2aZYjM-Q9iwxXPO7EnyU9y8I4N4-r31oBvb1bv3Yc0YYB1M-VXyn56PtGCFM2AaUSbYKZBD2yLKF6QUMmWa&_nc_zt=23&_nc_ht=scontent.fsgn21-1.fna&_nc_gid=2VfzLP0HwXXmY6gmfFxWqw&oh=00_AfRS2AS7qmPGz9dSe3jvA1Tx5pWDZOF9KwbBA6Q7rky9vg&oe=687D3C9E" alt="Avatar" class="profile-avatar">
-            <h4 class="profile-name"><?php echo htmlspecialchars($userName); ?></h4>
-            <p class="profile-email"><?php echo htmlspecialchars($userEmail); ?></p>
-        </div>
-        <nav class="sidebar-nav">
-            <ul>
-                <li><a href="dashboard.php"><i class='bx bxs-dashboard'></i><span>Bảng điều khiển</span></a></li>
-                <li><a href="accounts.php"><i class='bx bxs-credit-card-alt'></i><span>Tài khoản</span></a></li>
-                <li><a href="transactions.php"><i class='bx bx-transfer-alt'></i><span>Giao dịch</span></a></li>
-                <li><a href="reports.php"><i class='bx bx-bar-chart-square'></i><span>Báo cáo</span></a></li>
-                <li><a href="budgets.php" class="active"><i class='bx bx-pie-chart-alt-2'></i><span>Ngân sách</span></a></li>
-                <li><a href="#"><i class='bx bxs-flag-checkered'></i><span>Mục tiêu Tiết kiệm</span></a></li>
-                <li><a href="#"><i class='bx bx-receipt'></i><span>Hóa đơn định kỳ</span></a></li>
-                <hr class="nav-divider">
-                <li><a href="#"><i class='bx bxs-cog'></i><span>Cài đặt</span></a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer">
-            <a href="login.php" class="logout-button"><i class='bx bx-log-out'></i><span>Đăng xuất</span></a>
-        </div>
-    </aside>
+    <?php include('sidebar/sidebar.php') ?>
 
     <!-- ========== MAIN CONTENT ========== -->
     <main class="main-content">

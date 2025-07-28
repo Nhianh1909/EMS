@@ -29,18 +29,18 @@ error_reporting(E_ALL);
             <div class="auth-form-wrapper">
                 <h2 class="auth-title">Sign Up</h2>
                 
-                <form class="auth-form register-form" action="#" method="POST">
+                <form class="auth-form register-form" action="register_check.php" method="POST" autocomplete="on">
                     <!-- Nhóm nhập liệu cho Tên -->
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <img src="https://placehold.co/24x24/FFFFFF/999999?text=👤" alt="User Icon" class="form-icon">
                         <input type="text" name="first_name" placeholder="Enter First Name" required>
-                    </div>
+                    </div> -->
 
                     <!-- Nhóm nhập liệu cho Họ -->
-                    <div class="form-group">
+                    <!-- <div class="form-group">
                         <img src="https://placehold.co/24x24/FFFFFF/999999?text=👤" alt="User Icon" class="form-icon">
                         <input type="text" name="last_name" placeholder="Enter Last Name" required>
-                    </div>
+                    </div> -->
                     
                     <!-- Nhóm nhập liệu cho Tên người dùng -->
                     <div class="form-group">

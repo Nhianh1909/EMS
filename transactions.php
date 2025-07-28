@@ -2,6 +2,26 @@
 include('config/config.php');
 session_start();
 
+if(!isset($_SESSION['user_id'])){
+    header('Location: login.php');
+    exit();
+}
+
+$sql_transaction = $conn->prepare("
+    SELECT t.id, t.description, t.amount, t.transaction_date, c.name as category, c.type
+    FROM transactions t
+    JOIN categories c on t.category_id = c.id
+    WHERE t.user_id = :id AND c.user_id = :id
+    ORDER BY t.transaction_date DESC
+");
+$sql_transaction->execute(['id'=> $_SESSION['user_id']]);
+$transactions = $sql_transaction->fetchAll(PDO::FETCH_ASSOC);
+
+// echo '<pre>';
+// print_r($transactions);
+// echo '</pre>';
+// exit;
+
 
 
 // Lấy các giá trị bộ lọc từ URL, nếu không có thì dùng giá trị mặc định
@@ -11,46 +31,29 @@ $selectedYear = $_GET['year'] ?? date('Y');
 $selectedType = $_GET['type'] ?? 'all';
 
 
-// Dữ liệu giao dịch mẫu MỞ RỘNG (thêm dữ liệu tháng 6 và ID)
-$all_transactions = [
-    // Tháng 7
-    ['id' => 1, 'date' => '15/07/2025', 'type' => 'expense', 'category' => 'Ăn uống', 'description' => 'Cà phê với bạn bè', 'amount' => -75000],
-    ['id' => 2, 'date' => '15/07/2025', 'type' => 'expense', 'category' => 'Di chuyển', 'description' => 'Grab bike đi làm', 'amount' => -25000],
-    ['id' => 3, 'date' => '14/07/2025', 'type' => 'expense', 'category' => 'Mua sắm', 'description' => 'Mua sắm tại siêu thị Co.opmart', 'amount' => -1250000],
-    ['id' => 4, 'date' => '12/07/2025', 'type' => 'expense', 'category' => 'Giải trí', 'description' => 'Xem phim tại CGV', 'amount' => -250000],
-    ['id' => 5, 'date' => '10/07/2025', 'type' => 'expense', 'category' => 'Hóa đơn', 'description' => 'Thanh toán tiền điện', 'amount' => -650000],
-    ['id' => 6, 'date' => '05/07/2025', 'type' => 'income', 'category' => 'Lương', 'description' => 'Lương tháng 7', 'amount' => 15000000],
-    ['id' => 7, 'date' => '01/07/2025', 'type' => 'expense', 'category' => 'Hóa đơn', 'description' => 'Thanh toán tiền nhà', 'amount' => -4000000],
-    // Tháng 6
-    ['id' => 8, 'date' => '25/06/2025', 'type' => 'income', 'category' => 'Thưởng', 'description' => 'Thưởng dự án', 'amount' => 2000000],
-    ['id' => 9, 'date' => '20/06/2025', 'type' => 'expense', 'category' => 'Ăn uống', 'description' => 'Ăn trưa văn phòng', 'amount' => -50000],
-    ['id' => 10, 'date' => '05/06/2025', 'type' => 'income', 'category' => 'Lương', 'description' => 'Lương tháng 6', 'amount' => 15000000],
-];
-
 // --- LOGIC LỌC GIAO DỊCH NÂNG CAO ---
-$filtered_transactions = $all_transactions;
+$filtered_transactions = $transactions;
 
 // 1. Lọc theo Năm
 $filtered_transactions = array_filter($filtered_transactions, function($transaction) use ($selectedYear) {
-    $date_parts = explode('/', $transaction['date']);
-    return $date_parts[2] == $selectedYear;
+    return date('Y', strtotime($transaction['transaction_date'])) == $selectedYear;
 });
+//strtotime($transaction['transaction_date']) -> chuyển chuỗi ngày thành timestamp, timestamp là số giây từ 1970 đến thời điểm hiện tại
+//date('Y', strtotime($transaction['transaction_date'])) -> lấy năm của timestamp, nếu năm lọc == Y thì lọc theo đk. Bên dưới cũng xử lí như v
 
 // 2. Lọc theo Tháng
 $filtered_transactions = array_filter($filtered_transactions, function($transaction) use ($selectedMonth) {
-    $date_parts = explode('/', $transaction['date']);
-    return ltrim($date_parts[1], '0') == $selectedMonth;
+    return date('n', strtotime($transaction['transaction_date'])) == (int)$selectedMonth;
 });
 
-// 3. Lọc theo Ngày (chỉ khi ngày cụ thể được chọn)
+// 3. Lọc theo Ngày (nếu không phải "all")
 if ($selectedDay !== 'all') {
     $filtered_transactions = array_filter($filtered_transactions, function($transaction) use ($selectedDay) {
-        $date_parts = explode('/', $transaction['date']);
-        return ltrim($date_parts[0], '0') == $selectedDay;
+        return date('j', strtotime($transaction['transaction_date'])) == (int)$selectedDay;
     });
 }
 
-// 4. Lọc theo Loại (Thu nhập/Chi tiêu)
+// 4. Lọc theo Loại (income / expense)
 if ($selectedType !== 'all') {
     $filtered_transactions = array_filter($filtered_transactions, function($transaction) use ($selectedType) {
         return $transaction['type'] === $selectedType;
@@ -156,8 +159,8 @@ if ($selectedType !== 'all') {
                                 data-category="<?php echo htmlspecialchars($t['category']); ?>" 
                                 data-description="<?php echo htmlspecialchars($t['description']); ?>" 
                                 data-amount="<?php echo abs($t['amount']); ?>" 
-                                data-date="<?php echo date('Y-m-d', strtotime(str_replace('/', '-', $t['date']))); ?>">
-                                <td><?php echo $t['date']; ?></td>
+                                data-date="<?php echo date('Y-m-d', strtotime($t['transaction_date'])); ?>">
+                                <td><?php echo date('d/m/Y', strtotime($t['transaction_date'])); ?></td>
                                 <td><?php echo htmlspecialchars($t['category']); ?></td>
                                 <td><?php echo htmlspecialchars($t['description']); ?></td>
                                 <td class="amount-col <?php echo $t['type']; ?>">
@@ -185,7 +188,7 @@ if ($selectedType !== 'all') {
             <button id="close-modal-btn" class="close-button">&times;</button>
         </div>
         <div class="modal-body">
-            <form id="transaction-form" action="#" method="POST">
+            <form id="transaction-form" action="add_transaction.php" method="POST">
                 <input type="hidden" id="trans-id" name="trans_id">
                 <div class="form-row">
                     <div class="form-group-modal">
@@ -203,14 +206,14 @@ if ($selectedType !== 'all') {
                 <div class="form-group-modal">
                     <label for="trans-category">Danh mục</label>
                     <select id="trans-category" name="trans_category">
-                        <option>Ăn uống</option>
-                        <option>Mua sắm</option>
-                        <option>Di chuyển</option>
-                        <option>Hóa đơn</option>
-                        <option>Giải trí</option>
-                        <option>Lương</option>
-                        <option>Thưởng</option>
-                        <option>Khác</option>
+                        <?php
+                        $sql_getCat = $conn->prepare("SELECT * FROM categories WHERE user_id = :u_id");
+                        $sql_getCat->execute(['u_id'=>$_SESSION['user_id']]);
+                        $categories = $sql_getCat->fetchAll(PDO::FETCH_ASSOC);
+                        foreach($categories as $cat){
+                            echo "<option value='{$cat['id']}'>{$cat['name']}</option>";
+                        }
+                        ?>
                     </select>
                 </div>
                 <div class="form-group-modal">

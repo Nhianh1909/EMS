@@ -213,6 +213,80 @@ ALTER TABLE `transactions`
   ADD CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE;
 COMMIT;
 
+
+-- insert user
+INSERT INTO Users (username, email, password)
+VALUES 
+  ('user1', 'user1@mail.com', 'pass1'),
+  ('user2', 'user2@mail.com', 'pass2'),
+  ('user3', 'user3@mail.com', 'pass3'),
+  ('user4', 'user4@mail.com', 'pass4'),
+  ('user5', 'user5@mail.com', 'pass5'),
+  ('user6', 'user6@mail.com', 'pass6'),
+  ('user7', 'user7@mail.com', 'pass7'),
+  ('user8', 'user8@mail.com', 'pass8'),
+  ('user9', 'user9@mail.com', 'pass9'),
+  ('user10', 'user10@mail.com', 'pass10');
+  -- insert category
+  INSERT INTO Categories (user_id, name, type)
+VALUES
+  -- Dành cho user_id = 2 (Vo Nhi Anh)
+  (2, 'Lương chính', 'income'),
+  (2, 'Thưởng hiệu suất', 'income'),
+  (2, 'Ăn uống', 'expense'),
+  (2, 'Đi lại', 'expense'),
+  (2, 'Mua sắm', 'expense'),
+
+  -- Dành cho user_id = 4 (Nguyễn Văn A)
+  (4, 'Thu nhập freelance', 'income'),
+  (4, 'Dạy học thêm', 'income'),
+  (4, 'Hóa đơn điện', 'expense'),
+  (4, 'Giải trí', 'expense'),
+  (4, 'Tiền nhà', 'expense');
+
+-- insert transaction
+INSERT INTO Transactions (user_id, category_id, amount, description, transaction_date)
+VALUES
+  -- User 2 (id = 2)
+  (2, 1, 15000000, 'Lương tháng 7', '2025-07-01 08:00:00'),
+  (2, 2, 2000000, 'Thưởng tháng', '2025-07-05 10:00:00'),
+  (2, 3, 120000, 'Ăn trưa KFC', '2025-07-07 12:00:00'),
+  (2, 4, 50000, 'Grab đi làm', '2025-07-08 08:00:00'),
+  (2, 5, 700000, 'Mua đồ Shopee', '2025-07-10 20:00:00'),
+
+  -- User 4 (id = 4)
+  (4, 6, 5000000, 'Dự án content', '2025-07-03 09:00:00'),
+  (4, 7, 3000000, 'Gia sư tiếng Anh', '2025-07-06 15:00:00'),
+  (4, 8, 900000, 'Tiền điện', '2025-07-07 18:00:00'),
+  (4, 9, 200000, 'Xem phim', '2025-07-09 19:00:00'),
+  (4,10, 2500000, 'Trả tiền thuê nhà', '2025-07-11 09:00:00');
+
+-- Budget
+INSERT INTO Budgets (user_id, category_id, amount, start_date, end_date)
+VALUES
+  -- User 2
+  (2, 3, 1500000, '2025-07-01', '2025-07-31'), -- Ăn uống
+  (2, 4, 1000000, '2025-07-01', '2025-07-31'), -- Đi lại
+  (2, 5, 2000000, '2025-07-01', '2025-07-31'), -- Mua sắm
+  (2, 1, 20000000, '2025-07-01', '2025-07-31'), -- Lương
+  (2, 2, 5000000, '2025-07-01', '2025-07-31'), -- Thưởng
+
+  -- User 4
+  (4, 8, 1000000, '2025-07-01', '2025-07-31'), -- Hóa đơn điện
+  (4, 9, 500000,  '2025-07-01', '2025-07-31'), -- Giải trí
+  (4,10, 3000000, '2025-07-01', '2025-07-31'), -- Tiền nhà
+  (4, 6, 7000000, '2025-07-01', '2025-07-31'), -- Freelance
+  (4, 7, 4000000, '2025-07-01', '2025-07-31'); -- Dạy học
+
+-- statics
+INSERT INTO Statistics (user_id, type, period_type, period_value, total_amount)
+VALUES
+  (2, 'income', 'month', '2025-07', 17000000),   -- Lương + Thưởng
+  (2, 'expense', 'month', '2025-07', 870000),    -- Ăn + Đi lại + Mua sắm
+
+  (4, 'income', 'month', '2025-07', 8000000),    -- Freelance + Dạy học
+  (4, 'expense', 'month', '2025-07', 3400000);   -- Hóa đơn + Giải trí + Nhà
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

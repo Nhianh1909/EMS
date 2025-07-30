@@ -86,8 +86,12 @@ if ($selectedType !== 'all') {
                 <h1>Quản lý Giao dịch</h1>
                 <p class="welcome-message">Xem và quản lý tất cả giao dịch của bạn tại đây.</p>
             </div>
-             <div class="header-right">
-                <button id="add-transaction-btn" class="action-button primary-btn"><i class='bx bx-plus'></i> <span>Thêm giao dịch</span></button>
+             <div class="header-end">
+                <div class="header-left">
+                    <button id="handle-category-btn" class="action-button primary-btn"><i class='bx bx-plus'></i> <span>Điều chỉnh danh mục</span></button>
+                </div>
+                <div class="header-right">
+                    <button id="add-transaction-btn" class="action-button primary-btn"><i class='bx bx-plus'></i> <span>Thêm giao dịch</span></button>
             </div>
         </header>
 
@@ -232,6 +236,86 @@ if ($selectedType !== 'all') {
         </div>
     </div>
 </div>
+    <!-- ========== MODAL ĐIỀU CHỈNH DANH MỤC ========== -->
+<div id="manage-category-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+        <h2>Điều chỉnh Danh mục</h2>
+        <button id="close-category-modal-btn" class="close-button">&times;</button>
+        </div>
+        <div class="modal-body">
+        <!-- Bạn có thể đặt form thêm mới danh mục và danh sách danh mục hiện tại ở đây -->
+        <form id="category-form" action="manage_category.php" method="POST">
+            <input type="hidden" name="category_id" id="edit-category-id">
+            <div class="form-group-modal">
+                <label for="category-name">Tên Danh mục</label>
+                <input type="text" id="category-name" name="category_name" placeholder="Nhập tên danh mục" required>
+            </div>
+            <div class="form-group-modal">
+                <label for="category-type">Loại</label>
+                <select id="category-type" name="category_type">
+                <option value="income">Thu nhập</option>
+                <option value="expense">Chi tiêu</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancel-category-btn" class="btn btn-secondary">Hủy</button>
+                <button type="button" id="back-to-add-btn" class="btn btn-secondary hidden">Quay lại Thêm</button>
+                <button type="submit" class="btn btn-primary">Thêm Danh mục</button>
+            </div>
+        </form>
+
+
+        <div id="category-list" style="margin-top: 20px; max-height: 300px; overflow-y: auto;">
+            <h3>Danh sách Danh mục</h3>
+            <ul style="list-style: none; padding: 0;">
+                <?php
+                // $sql_getCat = $conn->prepare("SELECT * FROM categories WHERE user_id = :u_id");
+                // $sql_getCat->execute(['u_id' => $_SESSION['user_id']]);
+                // $categories = $sql_getCat->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($categories as $cat) {
+                    $icon = '';
+                    if ($cat['type'] === 'income') $icon = '💰';
+                    if ($cat['type'] === 'expense') $icon = '💸';
+
+                    $nameLower = strtolower($cat['name']);
+                    if (str_contains($nameLower, 'ăn') || str_contains($nameLower, 'food')) $icon = '🍔';
+                    elseif (str_contains($nameLower, 'xe') || str_contains($nameLower, 'transport')) $icon = '🚗';
+                    elseif (str_contains($nameLower, 'nhà') || str_contains($nameLower, 'rent')) $icon = '🏠';
+
+                    echo "
+                        <li style='
+                                margin: 8px 0;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;'
+                                data-id='{$cat['id']}'
+                                data-name='" . htmlspecialchars($cat['name']) . "'
+                                data-type='{$cat['type']}'>
+                            <div style='display: flex; align-items: center;'>
+                                <span style='margin-right: 8px;'>$icon</span>
+                                <span>{$cat['name']} ({$cat['type']})</span>
+                            </div>
+                            <div>
+                                <button type='button' class='btn-edit-category btn btn-small'>Sửa</button>
+                                <a href='manage_category.php?action=delete&id={$cat['id']}'
+                                class='btn btn-danger btn-small'
+                                onclick='return confirm(\"Bạn có chắc chắn muốn xóa?\");'>
+                                Xóa
+                                </a>
+                            </div>
+                        </li>
+                        ";
+
+                }
+                ?>
+            </ul>
+        </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- ========== MODAL XÁC NHẬN XÓA ========== -->
 <div id="delete-confirm-modal" class="modal-overlay hidden">
@@ -253,106 +337,189 @@ if ($selectedType !== 'all') {
 
 <!-- JAVASCRIPT ĐỂ ĐIỀU KHIỂN MODAL VÀ CÁC HÀNH ĐỘNG -->
 <script>
-    // Lấy các phần tử cần thiết từ DOM
-    const addTransactionBtn = document.getElementById('add-transaction-btn');
-    const transactionTableBody = document.getElementById('transaction-table-body');
-    
-    // Modal Thêm/Sửa
-    const addEditModal = document.getElementById('add-transaction-modal');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const cancelBtn = document.getElementById('cancel-btn');
-    const transTypeSelect = document.getElementById('trans-type');
-    const transAmountInput = document.getElementById('trans-amount');
-    const modalTitle = document.getElementById('modal-title');
-    const saveBtn = document.getElementById('save-btn');
-    const transIdInput = document.getElementById('trans-id');
-    const transCategorySelect = document.getElementById('trans-category');
-    const transDateInput = document.getElementById('trans-date');
-    const transDescriptionTextarea = document.getElementById('trans-description');
+/* ===========================================
+   MODAL XỬ LÝ GIAO DỊCH
+=========================================== */
 
-    // Modal Xác nhận Xóa
-    const deleteModal = document.getElementById('delete-confirm-modal');
-    const closeDeleteModalBtn = document.getElementById('close-delete-modal-btn');
-    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
-    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-    let rowToDelete = null; // Biến để lưu trữ hàng cần xóa
+// Lấy các phần tử modal Giao dịch
+const addTransactionBtn = document.getElementById('add-transaction-btn');
+const transactionTableBody = document.getElementById('transaction-table-body');
+const addEditModal = document.getElementById('add-transaction-modal');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const cancelBtn = document.getElementById('cancel-btn');
+const transTypeSelect = document.getElementById('trans-type');
+const transAmountInput = document.getElementById('trans-amount');
+const modalTitle = document.getElementById('modal-title');
+const saveBtn = document.getElementById('save-btn');
+const transIdInput = document.getElementById('trans-id');
+const transCategorySelect = document.getElementById('trans-category');
+const transDateInput = document.getElementById('trans-date');
+const transDescriptionTextarea = document.getElementById('trans-description');
 
-    // --- Các hàm chung ---
-    const showModal = (modalElement) => modalElement.classList.remove('hidden');
-    const hideModal = (modalElement) => modalElement.classList.add('hidden');
+// Modal Xác nhận Xóa
+const deleteModal = document.getElementById('delete-confirm-modal');
+const closeDeleteModalBtn = document.getElementById('close-delete-modal-btn');
+const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+let rowToDelete = null; // Lưu hàng cần xóa
 
-    // --- Xử lý Modal Thêm/Sửa ---
-    const updateAmountStyle = () => {
-        const selectedType = transTypeSelect.value;
-        transAmountInput.classList.remove('income-text', 'expense-text');
-        if (selectedType === 'income') {
-            transAmountInput.classList.add('income-text');
-        } else {
-            transAmountInput.classList.add('expense-text');
-        }
-    };
+// --- Hàm dùng chung ---
+const showModal = (modalElement) => modalElement.classList.remove('hidden');
+const hideModal = (modalElement) => modalElement.classList.add('hidden');
 
-    const setupAddModal = () => {
-        document.getElementById('transaction-form').reset();
-        transIdInput.value = '';
-        modalTitle.textContent = 'Thêm Giao dịch mới';
-        saveBtn.textContent = 'Lưu Giao dịch';
-        transDateInput.value = new Date().toISOString().slice(0, 10);
-        updateAmountStyle();
-        showModal(addEditModal);
-    };
+// --- Hàm Thêm/Sửa Giao dịch ---
+const updateAmountStyle = () => {
+  const selectedType = transTypeSelect.value;
+  transAmountInput.classList.remove('income-text', 'expense-text');
+  if (selectedType === 'income') {
+    transAmountInput.classList.add('income-text');
+  } else {
+    transAmountInput.classList.add('expense-text');
+  }
+};
 
-    addTransactionBtn.addEventListener('click', setupAddModal);
-    closeModalBtn.addEventListener('click', () => hideModal(addEditModal));
-    cancelBtn.addEventListener('click', () => hideModal(addEditModal));
-    addEditModal.addEventListener('click', (e) => {
-        if (e.target === addEditModal) hideModal(addEditModal);
-    });
-    transTypeSelect.addEventListener('change', updateAmountStyle);
+const setupAddModal = () => {
+  document.getElementById('transaction-form').reset();
+  transIdInput.value = '';
+  modalTitle.textContent = 'Thêm Giao dịch mới';
+  saveBtn.textContent = 'Lưu Giao dịch';
+  transDateInput.value = new Date().toISOString().slice(0, 10);
+  updateAmountStyle();
+  showModal(addEditModal);
+};
 
-    // --- Xử lý Modal Xóa ---
-    closeDeleteModalBtn.addEventListener('click', () => hideModal(deleteModal));
-    cancelDeleteBtn.addEventListener('click', () => hideModal(deleteModal));
-    deleteModal.addEventListener('click', (e) => {
-        if (e.target === deleteModal) hideModal(deleteModal);
-    });
+addTransactionBtn.addEventListener('click', setupAddModal);
+closeModalBtn.addEventListener('click', () => hideModal(addEditModal));
+cancelBtn.addEventListener('click', () => hideModal(addEditModal));
+addEditModal.addEventListener('click', (e) => {
+  if (e.target === addEditModal) hideModal(addEditModal);
+});
+transTypeSelect.addEventListener('change', updateAmountStyle);
 
-    confirmDeleteBtn.addEventListener('click', () => {
-        if (rowToDelete) {
-            rowToDelete.remove();
-            hideModal(deleteModal);
-            rowToDelete = null; // Reset biến
-        }
-    });
+// --- Xử lý Xóa Giao dịch ---
+closeDeleteModalBtn.addEventListener('click', () => hideModal(deleteModal));
+cancelDeleteBtn.addEventListener('click', () => hideModal(deleteModal));
+deleteModal.addEventListener('click', (e) => {
+  if (e.target === deleteModal) hideModal(deleteModal);
+});
+confirmDeleteBtn.addEventListener('click', () => {
+  if (rowToDelete) {
+    rowToDelete.remove();
+    hideModal(deleteModal);
+    rowToDelete = null;
+  }
+});
 
-    // --- Xử lý sự kiện click trên bảng (Sửa và Xóa) ---
-    transactionTableBody.addEventListener('click', (e) => {
-        const target = e.target;
-        const editBtn = target.closest('.edit-btn');
-        const deleteBtn = target.closest('.delete-btn');
+// --- Click trên bảng Giao dịch ---
+transactionTableBody.addEventListener('click', (e) => {
+  const target = e.target;
+  const editBtn = target.closest('.edit-btn');
+  const deleteBtn = target.closest('.delete-btn');
 
-        if (editBtn) {
-            const row = editBtn.closest('tr');
-            const dataset = row.dataset;
+  if (editBtn) {
+    const row = editBtn.closest('tr');
+    const dataset = row.dataset;
 
-            transIdInput.value = dataset.id;
-            transTypeSelect.value = dataset.type;
-            transAmountInput.value = dataset.amount;
-            transCategorySelect.value = dataset.category;
-            transDateInput.value = dataset.date;
-            transDescriptionTextarea.value = dataset.description;
+    transIdInput.value = dataset.id;
+    transTypeSelect.value = dataset.type;
+    transAmountInput.value = dataset.amount;
+    transCategorySelect.value = dataset.category;
+    transDateInput.value = dataset.date;
+    transDescriptionTextarea.value = dataset.description;
 
-            modalTitle.textContent = 'Chỉnh sửa Giao dịch';
-            saveBtn.textContent = 'Cập nhật';
-            updateAmountStyle();
-            showModal(addEditModal);
-        }
+    modalTitle.textContent = 'Chỉnh sửa Giao dịch';
+    saveBtn.textContent = 'Cập nhật';
+    updateAmountStyle();
+    showModal(addEditModal);
+  }
 
-        if (deleteBtn) {
-            rowToDelete = deleteBtn.closest('tr'); // Lưu hàng cần xóa
-            showModal(deleteModal); // Hiển thị modal xác nhận
-        }
-    });
+  if (deleteBtn) {
+    rowToDelete = deleteBtn.closest('tr');
+    showModal(deleteModal);
+  }
+});
+
+
+/* ===========================================
+   MODAL QUẢN LÝ DANH MỤC
+=========================================== */
+
+// Các phần tử modal Danh mục
+const handleCategoryBtn = document.getElementById('handle-category-btn');
+const manageCategoryModal = document.getElementById('manage-category-modal');
+const closeCategoryModalBtn = document.getElementById('close-category-modal-btn');
+const cancelCategoryBtn = document.getElementById('cancel-category-btn');
+
+const categoryList = document.getElementById('category-list');
+const categoryForm = document.getElementById('category-form');
+const nameInput = document.getElementById('category-name');
+const typeSelect = document.getElementById('category-type');
+const hiddenId = document.getElementById('edit-category-id');
+const submitBtn = categoryForm.querySelector('button[type="submit"]');
+const backToAddBtn = document.getElementById('back-to-add-btn');
+
+// Mở modal Quản lý Danh mục
+handleCategoryBtn.addEventListener('click', () => {
+  // 1. Ẩn modal trước nếu cần
+  // 2. Reset form
+  categoryForm.reset();
+
+  // 3. Xóa ID ẩn + text button
+  hiddenId.value = '';
+  submitBtn.textContent = 'Thêm Danh mục';
+
+  // 4. LUÔN ẨN nút Quay lại Thêm
+  backToAddBtn.classList.add('hidden');
+
+  // 5. Hiện modal
+  manageCategoryModal.classList.remove('hidden');
+});
+
+
+// Đóng modal Quản lý Danh mục
+closeCategoryModalBtn.addEventListener('click', () => {
+  manageCategoryModal.classList.add('hidden');
+});
+cancelCategoryBtn.addEventListener('click', () => {
+  manageCategoryModal.classList.add('hidden');
+});
+
+// Click ra ngoài để đóng modal
+manageCategoryModal.addEventListener('click', (e) => {
+  if (e.target === manageCategoryModal) {
+    manageCategoryModal.classList.add('hidden');
+  }
+});
+
+// Bấm SỬA Danh mục
+categoryList.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('.btn-edit-category');
+
+  if (editBtn) {
+    const li = editBtn.closest('li');
+    const id = li.dataset.id;
+    const name = li.dataset.name;
+    const type = li.dataset.type;
+
+    nameInput.value = name;
+    typeSelect.value = type;
+    hiddenId.value = id;
+
+    submitBtn.textContent = 'Cập nhật Danh mục';
+    backToAddBtn.classList.remove('hidden');
+  }
+});
+
+// Bấm QUAY LẠI THÊM Danh mục
+backToAddBtn.addEventListener('click', () => {
+  categoryForm.reset();
+  hiddenId.value = '';
+  submitBtn.textContent = 'Thêm Danh mục';
+  backToAddBtn.classList.add('hidden');
+});
+console.log('Quay lại trước:', backToAddBtn.classList);
+backToAddBtn.classList.add('hidden');
+console.log('Quay lại sau:', backToAddBtn.classList);
 
 </script>
 

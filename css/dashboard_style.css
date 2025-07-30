@@ -172,6 +172,9 @@ body {
     align-items: center;
     margin-bottom: 30px;
 }
+.header-left{
+    max-width: 60%;
+}
 
 .header-left h1 {
     font-size: 28px;
@@ -180,12 +183,24 @@ body {
 .welcome-message {
     color: var(--text-secondary);
 }
-
+.header-end{
+    display: flex;
+}
 .header-right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
+    margin-left: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
 }
+/* .header-left {  
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+} */
 
 .search-bar {
     display: flex;
@@ -560,173 +575,173 @@ body {
     color: var(--expense-color);
 }
 
-/* === CSS BỔ SUNG CHO MODAL THÊM GIAO DỊCH === */
+    /* === CSS BỔ SUNG CHO MODAL THÊM GIAO DỊCH === */
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 1;
-    transition: opacity 0.3s ease;
-}
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
 
-.modal-overlay.hidden {
-    opacity: 0;
-    pointer-events: none; /* Làm cho không thể click khi bị ẩn */
-}
+    .modal-overlay.hidden {
+        opacity: 0;
+        pointer-events: none; /* Làm cho không thể click khi bị ẩn */
+    }
 
-.modal-content {
-    background-color: white;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    width: 100%;
-    max-width: 500px;
-    transform: translateY(0);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
+    .modal-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        width: 100%;
+        max-width: 500px;
+        transform: translateY(0);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
 
-.modal-overlay.hidden .modal-content {
-    transform: translateY(-20px);
-}
+    .modal-overlay.hidden .modal-content {
+        transform: translateY(-20px);
+    }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-}
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
 
-.modal-header h2 {
-    font-size: 22px;
-    color: var(--text-primary);
-}
+    .modal-header h2 {
+        font-size: 22px;
+        color: var(--text-primary);
+    }
 
-.close-button {
-    background: none;
-    border: none;
-    font-size: 28px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    line-height: 1;
-}
+    .close-button {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        line-height: 1;
+    }
 
-.modal-body .form-row {
-    display: flex;
-    gap: 20px;
-}
+    .modal-body .form-row {
+        display: flex;
+        gap: 20px;
+    }
 
-.modal-body .form-row .form-group-modal {
-    flex: 1;
-}
+    .modal-body .form-row .form-group-modal {
+        flex: 1;
+    }
 
-.form-group-modal {
-    margin-bottom: 15px;
-}
+    .form-group-modal {
+        margin-bottom: 15px;
+    }
 
-.form-group-modal label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: var(--text-primary);
-}
+    .form-group-modal label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+    }
 
-.form-group-modal input,
-.form-group-modal select,
-.form-group-modal textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 16px;
-    font-family: 'Poppins', sans-serif;
-    transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
-}
+    .form-group-modal input,
+    .form-group-modal select,
+    .form-group-modal textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 16px;
+        font-family: 'Poppins', sans-serif;
+        transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+    }
 
-.form-group-modal input:focus,
-.form-group-modal select:focus,
-.form-group-modal textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.2);
-}
+    .form-group-modal input:focus,
+    .form-group-modal select:focus,
+    .form-group-modal textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.2);
+    }
 
-.form-group-modal textarea {
-    resize: vertical;
-    min-height: 80px;
-}
+    .form-group-modal textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
 
-.form-group-modal input.income-text {
-    color: var(--income-color) !important;
-    font-weight: 600;
-}
+    .form-group-modal input.income-text {
+        color: var(--income-color) !important;
+        font-weight: 600;
+    }
 
-.form-group-modal input.expense-text {
-    color: var(--expense-color) !important;
-    font-weight: 600;
-}
+    .form-group-modal input.expense-text {
+        color: var(--expense-color) !important;
+        font-weight: 600;
+    }
 
 
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
-}
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
 
-.btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
 
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-}
-.btn-primary:hover {
-    background-color: var(--primary-hover);
-}
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+    }
 
-.btn-secondary {
-    background-color: #e2e8f0;
-    color: var(--text-secondary);
-}
-.btn-secondary:hover {
-    background-color: #cbd5e1;
-}
+    .btn-secondary {
+        background-color: #e2e8f0;
+        color: var(--text-secondary);
+    }
+    .btn-secondary:hover {
+        background-color: #cbd5e1;
+    }
 
-.modal-content.modal-sm {
-    max-width: 400px;
-}
+    .modal-content.modal-sm {
+        max-width: 400px;
+    }
 
-.modal-sm .modal-body p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
+    .modal-sm .modal-body p {
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
 
-.btn-danger {
-    background-color: var(--expense-color);
-    color: white;
-}
-.btn-danger:hover {
-    background-color: #c82333;
-}
+    .btn-danger {
+        background-color: var(--expense-color);
+        color: white;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
 
 /* === CSS BỔ SUNG CHO TRANG BÁO CÁO === */
 
@@ -941,7 +956,9 @@ body {
     color: var(--text-secondary);
     font-weight: 500;
 }
-
+.hidden {
+  display: none !important;
+}
 
 /* === ĐỊNH NGHĨA HIỆU ỨNG (KEYFRAMES) === */
 

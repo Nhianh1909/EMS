@@ -951,11 +951,25 @@ body {
 .budget-card-footer {
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 14px;
     color: var(--text-secondary);
     font-weight: 500;
 }
+.budget-actions {
+    margin-top: 8px;
+}
+.budget-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    margin-left: 8px;
+}
+.btn-edit i { color: #3b82f6; }   /* xanh */
+.btn-delete i { color: #ef4444; } /* đỏ */
 .hidden {
   display: none !important;
 }

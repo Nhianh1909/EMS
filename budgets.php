@@ -18,41 +18,52 @@ $categoryIcons = [
     'Di chuyển' => ['icon' => 'bx-car',          'color' => '#3b82f6'],
     'Giải trí'  => ['icon' => 'bx-movie-play',   'color' => '#a855f7'],
     'Hóa đơn'   => ['icon' => 'bx-receipt',      'color' => '#84cc16'],
+    'Khác'      => ['icon' => 'bx-dots-horizontal-rounded', 'color' => '#6b7280']
 ];
 
 // 2. Truy vấn ngân sách kèm tổng chi tiêu
 $sql = "
-    SELECT 
+        SELECT 
+        b.category_id AS category_id,
         c.name AS category_name,
         b.amount AS total_budget,
+        c.type AS category_type,
         COALESCE(SUM(t.amount), 0) AS total_spent
     FROM budgets b
     JOIN categories c ON b.category_id = c.id
     LEFT JOIN transactions t ON b.category_id = t.category_id
-    WHERE b.user_id = :user_id
-    GROUP BY c.name, b.amount
+    WHERE b.user_id = :user_id AND c.type = 'expense'
+    GROUP BY b.category_id, c.name, b.amount, c.type
 ";
 
+
+    // LEFT JOIN transactions t ON b.category_id = t.category_id
 $stmt = $conn->prepare($sql);
 $stmt->execute(['user_id' => $_SESSION['user_id']]);
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// echo '<pre>';
+// print_r($results);
+// echo '</pre>';
 // 3. Gộp dữ liệu và ánh xạ icon
 $budgets = [];
 foreach ($results as $row) {
-    $category = $row['category_name'];
+    $categoryName = $row['category_name'];
     $limit = (int)$row['total_budget'];
     $spent = (int)$row['total_spent'];
-    
+
     // Lấy icon và màu từ ánh xạ
-    $iconInfo = $categoryIcons[$category] ?? ['icon' => 'bx-category', 'color' => '#9ca3af'];
+    $iconInfo = $categoryIcons[$categoryName] ?? ['icon' => 'bx-category', 'color' => '#9ca3af'];
     
     $budgets[] = [
-        'category' => $category,
+        'id'=> $row['category_id'],
+        'category' => $categoryName,
         'limit'    => $limit,
         'spent'    => $spent,
         'icon'     => $iconInfo['icon'],
         'color'    => $iconInfo['color'],
+    // echo $row['category_name'];
+
     ];
 }
 
@@ -107,6 +118,22 @@ foreach ($results as $row) {
                 </div>
                 <div class="budget-card-footer">
                     <p>Hạn mức: <?= number_format($budget['limit'], 0, ',', '.') ?>đ</p>
+                    
+                    <div class="budget-actions">
+                        <form action="manage_budget.php" method="POST" style="display:inline;">
+                            <input type="number" class="budget-limit-input" name="new_amount" value="<?= $budget['limit'] ?>" style="display:none;   width:80px;">
+                            <input type="hidden" name="action" value="edit">
+                            <input type="hidden" name="category_id" value="<?= htmlspecialchars($budget['id']); 
+                            ?>">
+                            <button type="submit" class="btn-edit"><i class='bx bx-edit-alt'></i></button>
+                            <button type="submit" class="btn-save" style="display:none;"><i class='bx bx-save'></i></button>
+                        </form>
+                        <form action="manage_budget.php" method="GET" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa ngân sách này?');">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="category_id" value="<?= htmlspecialchars($budget['id']) ?>">
+                            <button type="submit" class="btn-delete"><i class='bx bx-trash'></i></button>
+                        </form>
+                    </div>
                 </div>
             </div>
             <?php endforeach; ?>
@@ -123,13 +150,18 @@ foreach ($results as $row) {
             <button id="close-budget-modal-btn" class="close-button">&times;</button>
         </div>
         <div class="modal-body">
-            <form id="budget-form" action="" method="POST">
+            <form id="budget-form" action="manage_budget.php" method="POST">
+                <input type="hidden" name="action" value="add">
                 <div class="form-group-modal">
                     <label for="budget-category-id">Danh mục</label>
                     <select id="budget-category-id" name="budget_category_id" required>
-                        <?php foreach ($categories as $cat): ?>
+                        <?php
+                        $sql_cate = $conn->prepare("SELECT * FROM categories WHERE user_id = :u_id");
+                        $sql_cate->execute(['u_id' =>$_SESSION['user_id']]);
+                        $categories = $sql_cate->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($categories as $cat): ?>
                             <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-                        <?php endforeach; ?>
+                        <?php endforeach; ?> 
                     </select>
                 </div>
                 <div class="form-group-modal">
@@ -190,6 +222,23 @@ foreach ($results as $row) {
     budgetModal.addEventListener('click', (e) => {
         if (e.target === budgetModal) hideBudgetModal();
     });
+    // Phần này xử lý Edit Inline
+    // Xử lý Edit Inline
+  document.querySelectorAll('.budget-card-footer').forEach(footer => {
+    const editBtn = footer.querySelector('.btn-edit');
+    const saveBtn = footer.querySelector('.btn-save');
+    const limitText = footer.querySelector('p');
+    const limitInput = footer.querySelector('.budget-limit-input');
+
+    editBtn.addEventListener('click', function(e) {
+      e.preventDefault(); // Chặn submit form ngay khi bấm Edit
+      limitText.style.display = 'none';
+      limitInput.style.display = 'inline-block';
+      editBtn.style.display = 'none';
+      saveBtn.style.display = 'inline-block';
+      limitInput.focus();
+    });
+  });
 </script>
 
 </body>

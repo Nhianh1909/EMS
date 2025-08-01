@@ -44,11 +44,27 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
                 'type' => $type,
                 'u_id' => $user_id
             ]);
-            if ($sql_check->rowCount() > 0) {
-                echo "<script>alert('Danh mục đã tồn tại!'); window.location.href='transactions.php';</script>";
-                exit();
+            $existing = $sql_check->fetch(PDO::FETCH_ASSOC);
+
+            if($existing){
+                //nếu đã tồn tại danh mục ở dạng is_deleted = 0 thì chuyển nó thành 1 để hiển thị
+                if($existing['is_deleted']==1){
+                    $sql_restore = $conn->prepare("UPDATE categories SET is_deleted = 0, type = :type WHERE id = :category_id AND user_id = :u_id");
+                    $sql_restore->execute([
+                        'type' => $type,
+                    'category_id' => $existing['id'],
+                    'u_id' => $user_id
+                    ]);
+                    header("Location: transactions.php");
+                    exit();
+                }else{
+                    echo "<script>alert('Danh mục đã tồn tại!'); window.location.href='transactions.php';</script>";
+                    exit();
+
+                }
             }
-            // insert
+         
+            //nếu ko có thì tạo mới
             $sql_category = $conn->prepare("INSERT INTO categories (name, type, user_id, created_at) VALUES (:category_name, :type, :u_id, NOW())");
             $sql_category->execute([
                 'category_name' => $category_name,
@@ -67,7 +83,9 @@ if(isset($_GET['action'])&&$_GET['action']=='delete'&&isset($_GET['id'])){
     $user_id = $_SESSION['user_id'];
 
     //chỉ xóa danh mục của user hiện tại
-    $sql_delete = $conn->prepare("DELETE FROM categories WHERE id = :category_id AND user_id = :user_id");
+    $sql_delete = $conn->prepare(" UPDATE categories 
+  SET is_deleted = 1 
+  WHERE id = :category_id AND user_id = :user_id");
     $sql_delete->execute([
         'category_id' => $category_id,
         'user_id' => $user_id

@@ -8,11 +8,12 @@ if(!isset($_SESSION['user_id'])){
 }
 
 $sql_transaction = $conn->prepare("
-    SELECT t.id, t.description, t.amount, t.transaction_date, c.name as category, c.type
-    FROM transactions t
-    JOIN categories c on t.category_id = c.id
-    WHERE t.user_id = :id AND c.user_id = :id
-    ORDER BY t.transaction_date DESC
+  SELECT t.id, t.description, t.amount, t.transaction_date, 
+         c.name AS category, c.type, c.is_deleted
+  FROM transactions t
+  LEFT JOIN categories c ON t.category_id = c.id
+  WHERE t.user_id = :id
+  ORDER BY t.transaction_date DESC
 ");
 $sql_transaction->execute(['id'=> $_SESSION['user_id']]);
 $transactions = $sql_transaction->fetchAll(PDO::FETCH_ASSOC);
@@ -34,6 +35,12 @@ $selectedType = $_GET['type'] ?? 'all';
 // --- LOGIC LỌC GIAO DỊCH NÂNG CAO ---
 $filtered_transactions = $transactions;
 
+$getIdTrans = [];
+foreach($filtered_transactions as $getId){
+    $getIdTrans[] = [
+        'id' => $getId['id'],
+    ];
+}
 // 1. Lọc theo Năm
 $filtered_transactions = array_filter($filtered_transactions, function($transaction) use ($selectedYear) {
     return date('Y', strtotime($transaction['transaction_date'])) == $selectedYear;
@@ -165,7 +172,15 @@ if ($selectedType !== 'all') {
                                 data-amount="<?php echo abs($t['amount']); ?>" 
                                 data-date="<?php echo date('Y-m-d', strtotime($t['transaction_date'])); ?>">
                                 <td><?php echo date('d/m/Y', strtotime($t['transaction_date'])); ?></td>
-                                <td><?php echo htmlspecialchars($t['category']); ?></td>
+                                <td><?php 
+                                    if($t['category']== null){
+                                        echo"Không có danh mục";
+                                    }elseif($t['is_deleted']){
+                                        echo htmlspecialchars($t['category'] . ' (Đã xóa)');
+                                    }else {
+                                    echo htmlspecialchars($t['category']);
+                                    }
+                                ?></td>
                                 <td><?php echo htmlspecialchars($t['description']); ?></td>
                                 <td class="amount-col <?php echo $t['type']; ?>">
                                     <?php echo number_format($t['amount'], 0, ',', '.'); ?>đ
@@ -192,14 +207,20 @@ if ($selectedType !== 'all') {
             <button id="close-modal-btn" class="close-button">&times;</button>
         </div>
         <div class="modal-body">
-            <form id="transaction-form" action="add_transaction.php" method="POST">
-                <input type="hidden" id="trans-id" name="trans_id">
+            <?php
+            foreach($getIdTrans as $getID):
+
+            ?>
+            <form id="transaction-form" action="manage_transation.php" method="POST">
+                <input type="hidden" id="trans-id"name='action' value="add">
+                <input type="hidden" id="trans-id"name='action' value="edit">
+                <input type="hidden" name="transaction_id" value="<?= htmlspecialchars($getID['id']) ?>">
                 <div class="form-row">
                     <div class="form-group-modal">
                         <label for="trans-type">Loại giao dịch</label>
-                        <select id="trans-type" name="trans_type">
-                            <option value="expense">Chi tiêu</option>
+                        <select id="trans-type" name="trans_type" disabled>
                             <option value="income">Thu nhập</option>
+                            <option value="expense">Chi tiêu</option>
                         </select>
                     </div>
                     <div class="form-group-modal">
@@ -209,13 +230,15 @@ if ($selectedType !== 'all') {
                 </div>
                 <div class="form-group-modal">
                     <label for="trans-category">Danh mục</label>
-                    <select id="trans-category" name="trans_category">
+                    <select id="trans-category" name="trans_category" >
                         <?php
                         $sql_getCat = $conn->prepare("SELECT * FROM categories WHERE user_id = :u_id");
-                        $sql_getCat->execute(['u_id'=>$_SESSION['user_id']]);
+                        $sql_getCat->execute(['u_id' => $_SESSION['user_id']]);
                         $categories = $sql_getCat->fetchAll(PDO::FETCH_ASSOC);
                         foreach($categories as $cat){
-                            echo "<option value='{$cat['id']}'>{$cat['name']}</option>";
+                            if($cat['is_deleted'] == 0){
+                                echo "<option value='{$cat['id']}' data-type='{$cat['type']}'>{$cat['name']}</option>";
+                            }
                         }
                         ?>
                     </select>
@@ -233,6 +256,9 @@ if ($selectedType !== 'all') {
                     <button type="submit" id="save-btn" class="btn btn-primary">Lưu Giao dịch</button>
                 </div>
             </form>
+            <?php
+            endforeach;
+            ?>
         </div>
     </div>
 </div>
@@ -275,40 +301,63 @@ if ($selectedType !== 'all') {
                 // $categories = $sql_getCat->fetchAll(PDO::FETCH_ASSOC);
 
                 foreach ($categories as $cat) {
-                    $icon = '';
-                    if ($cat['type'] === 'income') $icon = '💰';
-                    if ($cat['type'] === 'expense') $icon = '💸';
+    $icon = '';
+    $label = htmlspecialchars($cat['name']);
 
-                    $nameLower = strtolower($cat['name']);
-                    if (str_contains($nameLower, 'ăn') || str_contains($nameLower, 'food')) $icon = '🍔';
-                    elseif (str_contains($nameLower, 'xe') || str_contains($nameLower, 'transport')) $icon = '🚗';
-                    elseif (str_contains($nameLower, 'nhà') || str_contains($nameLower, 'rent')) $icon = '🏠';
+    if ($cat['is_deleted'] == 0) {
+        // Loại hoạt động: gán icon theo loại và từ khoá
+        if ($cat['type'] === 'income') $icon = '💰';
+        if ($cat['type'] === 'expense') $icon = '💸';
 
-                    echo "
-                        <li style='
-                                margin: 8px 0;
-                                display: flex;
-                                align-items: center;
-                                justify-content: space-between;'
-                                data-id='{$cat['id']}'
-                                data-name='" . htmlspecialchars($cat['name']) . "'
-                                data-type='{$cat['type']}'>
-                            <div style='display: flex; align-items: center;'>
-                                <span style='margin-right: 8px;'>$icon</span>
-                                <span>{$cat['name']} ({$cat['type']})</span>
-                            </div>
-                            <div>
-                                <button type='button' class='btn-edit-category btn btn-small'>Sửa</button>
-                                <a href='manage_category.php?action=delete&id={$cat['id']}'
-                                class='btn btn-danger btn-small'
-                                onclick='return confirm(\"Bạn có chắc chắn muốn xóa?\");'>
-                                Xóa
-                                </a>
-                            </div>
-                        </li>
-                        ";
+        $nameLower = strtolower($cat['name']);
+        if (str_contains($nameLower, 'ăn') || str_contains($nameLower, 'food')) $icon = '🍔';
+        elseif (str_contains($nameLower, 'xe') || str_contains($nameLower, 'transport')) $icon = '🚗';
+        elseif (str_contains($nameLower, 'nhà') || str_contains($nameLower, 'rent')) $icon = '🏠';
 
-                }
+        echo "
+            <li style='
+                    margin: 8px 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;'
+                    data-id='{$cat['id']}'
+                    data-name='{$label}'
+                    data-type='{$cat['type']}'>
+                <div style='display: flex; align-items: center;'>
+                    <span style='margin-right: 8px;'>$icon</span>
+                    <span>{$label} ({$cat['type']})</span>
+                </div>
+                <div>
+                    <button type='button' class='btn-edit-category btn btn-small'>Sửa</button>
+                    <a href='manage_category.php?action=delete&id={$cat['id']}'
+                    class='btn btn-danger btn-small'
+                    onclick='return confirm(\"Bạn có chắc chắn muốn xóa?\");'>
+                    Xóa
+                    </a>
+                </div>
+            </li>
+        ";
+    } else {
+        // Loại đã xoá: icon ❌ + hiển thị tên + (Đã xoá) + không có nút sửa/xóa
+        $icon = '❌';
+        echo "
+            <li style='
+                    margin: 8px 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;'
+                    data-id='{$cat['id']}'
+                    data-name='{$label}'
+                    data-type='{$cat['type']}'>
+                <div style='display: flex; align-items: center; color: #aaa;'>
+                    <span style='margin-right: 8px;'>$icon</span>
+                    <span>{$label} ({$cat['type']}) <em>(Đã xoá)</em></span>
+                </div>
+            </li>
+        ";
+    }
+}
+
                 ?>
             </ul>
         </div>
@@ -355,6 +404,12 @@ const transIdInput = document.getElementById('trans-id');
 const transCategorySelect = document.getElementById('trans-category');
 const transDateInput = document.getElementById('trans-date');
 const transDescriptionTextarea = document.getElementById('trans-description');
+// Khi chọn Danh mục, tự đổi Loại giao dịch
+transCategorySelect.addEventListener('change', () => {
+  const selectedOption = transCategorySelect.options[transCategorySelect.selectedIndex];
+  const categoryType = selectedOption.getAttribute('data-type');
+  transTypeSelect.value = categoryType || '';
+});
 
 // Modal Xác nhận Xóa
 const deleteModal = document.getElementById('delete-confirm-modal');
@@ -367,13 +422,14 @@ let rowToDelete = null; // Lưu hàng cần xóa
 const showModal = (modalElement) => modalElement.classList.remove('hidden');
 const hideModal = (modalElement) => modalElement.classList.add('hidden');
 
-// --- Hàm Thêm/Sửa Giao dịch ---
+// // --- Hàm Thêm/Sửa Giao dịch ---
 const updateAmountStyle = () => {
   const selectedType = transTypeSelect.value;
+  console.log('Type hiện tại:', selectedType); // <-- Kiểm tra giá trị
   transAmountInput.classList.remove('income-text', 'expense-text');
   if (selectedType === 'income') {
-    transAmountInput.classList.add('income-text');
-  } else {
+    // transAmountInput.classList.add('income-text');
+  } else if (selectedType === 'expense') {
     transAmountInput.classList.add('expense-text');
   }
 };

@@ -1,39 +1,109 @@
 <?php
-include 'config/config.php';
 session_start();
+include('config/config.php');
+
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header('Location: login.php');
     exit();
 }
-// Lấy thông tin người dùng 
-$sql_info = "SELECT * FROM users WHERE id = :id";
-$stmt = $conn->prepare($sql_info);
-$stmt->execute(['id' => $_SESSION['user_id']]);//thay thế id bằng $_SESSION['user_id'] đang có
+
+$user_id = $_SESSION['user_id'];
+$current_month = '2025-07';
+
+// Lấy thông tin người dùng (username)
+$sqlUser = "SELECT username FROM users WHERE id = :user_id";
+$stmt = $conn->prepare($sqlUser);
+$stmt->execute([':user_id' => $user_id]);
 $user_info = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Tổng thu nhập
+$sqlIncome = "SELECT COALESCE(SUM(t.amount), 0) FROM transactions t 
+              JOIN categories c ON t.category_id = c.id 
+              WHERE t.user_id = :user_id AND c.type = 'income'";
+$stmt = $conn->prepare($sqlIncome);
+$stmt->execute([':user_id' => $user_id]);
+$total_income = $stmt->fetchColumn();
 
+// Tổng chi tiêu
+$sqlExpense = "SELECT COALESCE(SUM(t.amount), 0) FROM transactions t 
+               JOIN categories c ON t.category_id = c.id 
+               WHERE t.user_id = :user_id AND c.type = 'expense'";
+$stmt = $conn->prepare($sqlExpense);
+$stmt->execute([':user_id' => $user_id]);
+$total_expense = $stmt->fetchColumn();
 
-// Dữ liệu tổng quan
-$balance = 25680000;
-$income = 15000000;
-$expense = 4320000;
+// Tổng số dư
+$balance = $total_income - $total_expense;
 
-// Dữ liệu giao dịch gần đây
-$transactions = [
-    ['type' => 'expense', 'category' => 'Ăn uống', 'description' => 'Bữa tối tại nhà hàng Pizza 4P\'s', 'amount' => -850000, 'icon' => 'bx-restaurant'],
-    ['type' => 'expense', 'category' => 'Mua sắm', 'description' => 'Mua áo thun tại Uniqlo', 'amount' => -499000, 'icon' => 'bx-shopping-bag'],
-    ['type' => 'income', 'category' => 'Lương', 'description' => 'Lương tháng 8', 'amount' => 15000000, 'icon' => 'bx-money-withdraw'],
-    ['type' => 'expense', 'category' => 'Di chuyển', 'description' => 'Tiền xăng xe tháng 8', 'amount' => -500000, 'icon' => 'bx-gas-pump'],
-];
+// Chi tiêu tháng hiện tại từ bảng statistics
+$sqlMonthExpense= "SELECT SUM(total_amount) FROM statistics 
+        WHERE user_id = :user_id AND type = :type 
+        AND period_type = 'month' AND period_value = :period_value";
+$stmt = $conn->prepare($sqlMonthExpense);
+$stmt->execute([
+    ':user_id' => $user_id,
+    ':type' => 'expense',
+    ':period_value' => $current_month
+]);
+$monthly_expense= $stmt->fetchColumn();
+// Thu nhập tháng hiện tại từ bảng statistics
+$sqlMonthIncome = "SELECT SUM(total_amount) FROM statistics 
+        WHERE user_id = :user_id AND type = :type 
+        AND period_type = 'month' AND period_value = :period_value";
+$stmt = $conn->prepare($sqlMonthIncome);
+$stmt->execute([
+    ':user_id' => $user_id,
+    ':type' => 'income',
+    ':period_value' => $current_month
+]);
+$monthly_income = $stmt->fetchColumn();
 
-// Dữ liệu phân tích chi tiêu
-$spending_analysis = [
-    ['category' => 'Ăn uống', 'percentage' => 65, 'color' => '#ff6384'],
-    ['category' => 'Mua sắm', 'percentage' => 25, 'color' => '#36a2eb'],
-    ['category' => 'Khác', 'percentage' => 10, 'color' => '#ffce56'],
-];
+// Giao dịch gần đây
+$sqlRecent = "SELECT t.description, c.name AS category, c.type, t.amount, t.transaction_date 
+              FROM transactions t 
+              JOIN categories c ON t.category_id = c.id 
+              WHERE t.user_id = :user_id 
+              ORDER BY t.transaction_date DESC 
+              LIMIT 4";
+$stmt = $conn->prepare($sqlRecent);
+$stmt->execute([':user_id' => $user_id]);
+$recent_transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Phân tích tổng thu nhập và chi tiêu theo tháng cho pie chart (100%)
+$sum_query = "SELECT 
+    SUM(CASE WHEN type = 'income' THEN total_amount ELSE 0 END) AS income_sum,
+    SUM(CASE WHEN type = 'expense' THEN total_amount ELSE 0 END) AS expense_sum
+    FROM statistics 
+    WHERE user_id = :user_id AND period_type = 'month' AND period_value = :month";
+
+$stmt = $conn->prepare($sum_query);
+$stmt->execute([
+    ':user_id' => $user_id,
+    ':month' => $current_month
+]);
+$sum_result = $stmt->fetch(PDO::FETCH_ASSOC);
+$income_sum = $sum_result['income_sum'] ?? 0;
+$expense_sum = $sum_result['expense_sum'] ?? 0;
+$total_sum = $income_sum + $expense_sum;
+
+$expense_analysis = [];
+if ($total_sum > 0) {
+    $expense_analysis[] = [
+        'type' => 'income',
+        'percentage' => round($income_sum * 100 / $total_sum, 2),
+        'color' => '#43a047',
+        'label' => 'Thu nhập'
+    ];
+    $expense_analysis[] = [
+        'type' => 'expense',
+        'percentage' => round($expense_sum * 100 / $total_sum, 2),
+        'color' => '#e53935',
+        'label' => 'Chi tiêu'
+    ];
+}
 ?>
+
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -87,7 +157,7 @@ $spending_analysis = [
                 </div>
                 <div class="card-info">
                     <p>Thu nhập tháng</p>
-                    <h3 class="count-up" data-value="<?php echo $income; ?>">+0đ</h3>
+                    <h3 class="count-up" data-value="<?php echo $monthly_income; ?>">+0đ</h3>
                 </div>
             </div>
             <div class="card animated-card magnetic-effect" style="animation-delay: 0.2s;">
@@ -96,7 +166,7 @@ $spending_analysis = [
                 </div>
                 <div class="card-info">
                     <p>Chi tiêu tháng</p>
-                    <h3 class="count-up" data-value="<?php echo $expense; ?>">-0đ</h3>
+                    <h3 class="count-up" data-value="<?php echo $monthly_expense; ?>">-0đ</h3>
                 </div>
             </div>
         </section>
@@ -110,7 +180,7 @@ $spending_analysis = [
                     <a href="transactions.php" class="view-all">Xem tất cả</a>
                 </div>
                 <ul class="transaction-list">
-                    <?php foreach ($transactions as $index => $t): ?>
+                    <?php foreach ($recent_transactions as $index => $t): ?>
                     <li class="transaction-item animated-li" style="animation-delay: <?php echo 0.4 + $index * 0.1; ?>s;">
                         <div class="transaction-icon" style="background-color: <?php echo $t['type'] === 'income' ? '#e8f5e9' : '#fff3e0'; ?>;">
                             <i class='<?php echo $t['icon']; ?>' style="color: <?php echo $t['type'] === 'income' ? '#43a047' : '#fb8c00'; ?>;"></i>
@@ -132,19 +202,19 @@ $spending_analysis = [
                 <div class="section-header">
                     <h2>Phân tích chi tiêu</h2>
                 </div>
-                <div class="chart-container">
-                    <div class="donut-chart-placeholder">
-                        <div class="chart-center-text">
-                            <span>Tổng chi</span>
-                            <h4 class="count-up" data-value="<?php echo $expense; ?>">0đ</h4>
-                        </div>
+                <div >
+                    <canvas id="expenseDonutChart" width="200" height="200"></canvas>
+                    <div class="chart-center-text">
+                        <span>Tổng</span>
+                        <h4 class="count-up" data-value="<?php echo $expense_sum; ?>">0đ</h4>
                     </div>
                 </div>
+
                 <ul class="chart-legend">
-                    <?php foreach ($spending_analysis as $item): ?>
+                    <?php foreach ($expense_analysis as $item): ?>
                     <li>
                         <span class="legend-color" style="background-color: <?php echo $item['color']; ?>;"></span>
-                        <span class="legend-text"><?php echo htmlspecialchars($item['category']); ?></span>
+                       
                         <span class="legend-percentage"><?php echo $item['percentage']; ?>%</span>
                     </li>
                     <?php endforeach; ?>
@@ -154,8 +224,38 @@ $spending_analysis = [
     </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // ==== DỮ LIỆU BIỂU ĐỒ TỪ PHP ====
+    const chartData = <?php echo json_encode($expense_analysis); ?>;
+
+    const labels = chartData.map(item => item.label);
+    const percentages = chartData.map(item => item.percentage);
+    const colors = chartData.map(item => item.color);
+
+    const ctx = document.getElementById('expenseDonutChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: percentages,
+                backgroundColor: colors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
     // --- HIỆU ỨNG ĐẾM SỐ ---
     const countUpElements = document.querySelectorAll('.count-up');
     const animateCountUp = (el) => {
@@ -173,14 +273,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (progress < 1) {
                 window.requestAnimationFrame(step);
             } else {
-                 el.textContent = prefix + finalValue.toLocaleString('vi-VN') + 'đ';
+                el.textContent = prefix + finalValue.toLocaleString('vi-VN') + 'đ';
             }
         };
         window.requestAnimationFrame(step);
     };
     countUpElements.forEach(animateCountUp);
 
-    // --- HIỆU ỨNG NAM CHÂM KHI DI CHUỘT ---
+    // --- HIỆU ỨNG NAM CHÂM ---
     const magneticElements = document.querySelectorAll('.magnetic-effect');
     magneticElements.forEach(el => {
         el.addEventListener('mousemove', (e) => {
@@ -188,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
 
-            // Giảm cường độ di chuyển để hiệu ứng tinh tế hơn
             const moveX = x * 0.1;
             const moveY = y * 0.1;
 

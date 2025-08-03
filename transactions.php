@@ -341,22 +341,22 @@ if ($selectedType !== 'all') {
         // Loại đã xoá: icon ❌ + hiển thị tên + (Đã xoá) + không có nút sửa/xóa
         $icon = '❌';
         echo "
-            <li style='
-                    margin: 8px 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;'
-                    data-id='{$cat['id']}'
-                    data-name='{$label}'
-                    data-type='{$cat['type']}'>
-                <div style='display: flex; align-items: center; color: #aaa;'>
-                    <span style='margin-right: 8px;'>$icon</span>
-                    <span>{$label} ({$cat['type']}) <em>(Đã xoá)</em></span>
-                </div>
-            </li>
-        ";
-    }
-}
+                        <li style='
+                                margin: 8px 0;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;'
+                                data-id='{$cat['id']}'
+                                data-name='{$label}'
+                                data-type='{$cat['type']}'>
+                            <div style='display: flex; align-items: center; color: #aaa;'>
+                                <span style='margin-right: 8px;'>$icon</span>
+                                <span>{$label} ({$cat['type']}) <em>(Đã xoá)</em></span>
+                            </div>
+                        </li>
+                    ";
+                }
+            }
 
                 ?>
             </ul>
@@ -458,13 +458,35 @@ cancelDeleteBtn.addEventListener('click', () => hideModal(deleteModal));
 deleteModal.addEventListener('click', (e) => {
   if (e.target === deleteModal) hideModal(deleteModal);
 });
+
+// Xử lý xác nhận xóa
 confirmDeleteBtn.addEventListener('click', () => {
   if (rowToDelete) {
-    rowToDelete.remove();
-    hideModal(deleteModal);
-    rowToDelete = null;
+    const transactionId = rowToDelete.dataset.id;
+
+    fetch('delete_transaction.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `id=${transactionId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        rowToDelete.remove();
+      } else {
+        alert('Xóa thất bại: ' + (data.message || 'Đã xảy ra lỗi.'));
+      }
+      hideModal(deleteModal);
+      rowToDelete = null;
+    })
+    .catch(error => {
+      alert('Lỗi khi xóa giao dịch.');
+      hideModal(deleteModal);
+      rowToDelete = null;
+    });
   }
 });
+
 
 // --- Click trên bảng Giao dịch ---
 transactionTableBody.addEventListener('click', (e) => {

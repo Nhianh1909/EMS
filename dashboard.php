@@ -10,11 +10,11 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $current_month = '2025-07';
 
-// Lấy thông tin người dùng (username)
-$sqlUser = "SELECT username FROM users WHERE id = :user_id";
-$stmt = $conn->prepare($sqlUser);
-$stmt->execute([':user_id' => $user_id]);
-$user_info = $stmt->fetch(PDO::FETCH_ASSOC);
+// // Lấy thông tin người dùng (username)
+// $sqlUser = "SELECT username FROM users WHERE id = :user_id";
+// $stmt = $conn->prepare($sqlUser);
+// $stmt->execute([':user_id' => $user_id]);
+// $user_info = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Tổng thu nhập
 $sqlIncome = "SELECT COALESCE(SUM(t.amount), 0) FROM transactions t 

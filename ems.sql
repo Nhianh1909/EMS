@@ -702,38 +702,57 @@ COMMIT;
 -- PROCEDURE: AddTransaction
 -- Thêm giao dịch mới và cập nhật thống kê
 -- =====================================
-DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddTransaction` (IN `p_user_id` INT, IN `p_category_id` INT, IN `p_amount` DECIMAL(12,2), IN `p_description` TEXT, IN `p_transaction_date` DATETIME)   BEGIN
+    DECLARE v_type ENUM('income', 'expense');
+    DECLARE v_budget_id INT;
+    DECLARE v_budget_limit DECIMAL(12,2);
+    DECLARE v_total_spent DECIMAL(12,2);
 
-CREATE PROCEDURE AddTransaction(
-    IN p_user_id INT,
-    IN p_category_id INT,
-    IN p_amount DECIMAL(12,2),
-    IN p_description TEXT,
-    IN p_transaction_date DATETIME
-)
-BEGIN
-    -- Khởi tạo biến type (income / expense) và period (tháng)
-    DECLARE v_type VARCHAR(20);
-    DECLARE v_period VARCHAR(20);
+    -- Lấy loại (type) của danh mục
+    SELECT type INTO v_type
+    FROM categories
+    WHERE id = p_category_id;
 
-    -- Lấy type từ categories
-    SELECT type INTO v_type FROM categories WHERE id = p_category_id;
+    -- Nếu là chi tiêu thì kiểm tra ngân sách
+    IF v_type = 'expense' THEN
+        -- Tìm ngân sách phù hợp theo category và transaction_date nằm trong khoảng thời gian đó
+        SELECT id, amount INTO v_budget_id, v_budget_limit
+        FROM budgets
+        WHERE category_id = p_category_id
+          AND user_id = p_user_id
+          AND p_transaction_date BETWEEN start_date AND end_date
+        LIMIT 1;
 
-    SET v_period = DATE_FORMAT(p_transaction_date, '%Y-%m');
+        -- Nếu không có ngân sách phù hợp thì báo lỗi
+        IF v_budget_id IS NULL THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Không có ngân sách cho danh mục này trong thời gian hiện tại.';
+        END IF;
 
-    -- Chèn giao dịch mới
+        -- Tính tổng chi tiêu hiện tại của danh mục đó trong khoảng thời gian ngân sách
+        SELECT COALESCE(SUM(amount), 0) INTO v_total_spent
+        FROM transactions
+        WHERE category_id = p_category_id
+          AND user_id = p_user_id
+          AND transaction_date BETWEEN (
+              SELECT start_date FROM budgets WHERE id = v_budget_id
+          ) AND (
+              SELECT end_date FROM budgets WHERE id = v_budget_id
+          );
+
+        -- Kiểm tra nếu vượt quá ngân sách thì báo lỗi
+        IF (v_total_spent + p_amount) > v_budget_limit THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Chi tiêu vượt quá ngân sách cho danh mục này!';
+        END IF;
+    END IF;
+
+    -- Thêm giao dịch vào bảng
     INSERT INTO transactions (user_id, category_id, amount, description, transaction_date)
     VALUES (p_user_id, p_category_id, p_amount, p_description, p_transaction_date);
-
-    -- Cập nhật statistics
-    INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
-    VALUES (p_user_id, v_type, 'month', v_period, p_amount)
-    ON DUPLICATE KEY UPDATE total_amount = total_amount + p_amount;
-
 END$$
 
-DELIMITER;
-
+DELIMITER ;
 -- =====================================
 -- TRIGGER: after_insert_transaction
 -- Tự động cập nhật thống kê khi có giao dịch mới
@@ -765,70 +784,23 @@ END$$
 DELIMITER;
 
 -- =====================================
--- TRIGGER: check_budget_before_insert
--- Kiểm tra ngân sách trước khi thêm giao dịch chi tiêu
--- =====================================
-DELIMITER $$
-
-CREATE TRIGGER check_budget_before_insert
-BEFORE INSERT ON transactions
-FOR EACH ROW
-BEGIN
-  DECLARE v_budget DECIMAL(12,2) DEFAULT 0;
-  DECLARE v_spent DECIMAL(12,2) DEFAULT 0;
-  DECLARE v_start DATE;
-  DECLARE v_end DATE;
-
-  -- Chỉ kiểm tra nếu là chi tiêu
-  IF (SELECT type FROM categories WHERE id = NEW.category_id) = 'expense' THEN
-
-    -- Lấy ngân sách hiện tại
-    SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
-    FROM budgets
-    WHERE user_id = NEW.user_id
-      AND category_id = NEW.category_id
-      AND start_date <= NEW.transaction_date
-      AND end_date >= NEW.transaction_date
-    LIMIT 1;
-
-    -- Nếu có ngân sách thì kiểm tra tổng chi tiêu
-    IF v_budget IS NOT NULL THEN
-      SELECT COALESCE(SUM(amount), 0) INTO v_spent
-      FROM transactions
-      WHERE user_id = NEW.user_id
-        AND category_id = NEW.category_id
-        AND transaction_date BETWEEN v_start AND v_end;
-
-      -- Nếu vượt thì báo lỗi
-      IF (v_spent + NEW.amount) > v_budget THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Chi tiêu vượt quá ngân sách!';
-      END IF;
-    END IF;
-
-  END IF;
-END$$
-
-DELIMITER;
-
--- =====================================
 -- TRIGGER: after_delete_transaction
 -- Hoàn ngân sách khi xóa giao dịch
 -- =====================================
 DELIMITER $$
-
-CREATE TRIGGER after_delete_transaction
-AFTER DELETE ON transactions
-FOR EACH ROW
-BEGIN
+CREATE TRIGGER `after_delete_transaction` AFTER DELETE ON `transactions` FOR EACH ROW BEGIN
   DECLARE v_type VARCHAR(20);
   DECLARE v_period VARCHAR(20);
+  DECLARE v_budget DECIMAL(12,2);
+  DECLARE v_start DATE;
+  DECLARE v_end DATE;
+  DECLARE v_spent DECIMAL(12,2);
 
-  -- Lấy loại giao dịch từ bảng categories
+  -- Lấy loại giao dịch
   SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
   SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
 
-  -- Trừ số tiền khỏi statistics
+  -- 1. Cập nhật lại statistics: trừ tiền đã xóa
   UPDATE statistics
   SET total_amount = total_amount - OLD.amount
   WHERE user_id = OLD.user_id
@@ -836,67 +808,126 @@ BEGIN
     AND period_type = 'month'
     AND period_value = v_period;
 
-  -- Nếu sau khi trừ còn <= 0 thì xóa luôn
+  -- Xóa record nếu số tiền sau cập nhật = 0 hoặc âm
   DELETE FROM statistics
   WHERE user_id = OLD.user_id
     AND type = v_type
     AND period_type = 'month'
     AND period_value = v_period
     AND total_amount <= 0;
-END$$
 
-DELIMITER;
+  -- 2. Nếu là giao dịch chi tiêu thì cập nhật ngân sách
+  IF v_type = 'expense' THEN
+    -- Tìm ngân sách phù hợp với thời gian giao dịch đã xóa
+    SELECT amount, start_date, end_date
+    INTO v_budget, v_start, v_end
+    FROM budgets
+    WHERE user_id = OLD.user_id
+      AND category_id = OLD.category_id
+      AND start_date <= OLD.transaction_date
+      AND end_date >= OLD.transaction_date
+    LIMIT 1;
 
+    -- Nếu có ngân sách thì cập nhật lại số đã chi
+    IF v_budget IS NOT NULL THEN
+      SELECT COALESCE(SUM(amount), 0) INTO v_spent
+      FROM transactions
+      WHERE user_id = OLD.user_id
+        AND category_id = OLD.category_id
+        AND transaction_date BETWEEN v_start AND v_end;
+
+      -- Không cần cập nhật bảng ngân sách nếu bạn không lưu `spent` ở đó,
+      -- nhưng bạn có thể log lại nếu cần.
+    END IF;
+  END IF;
+
+END
+$$
+DELIMITER ;
 -- =====================================
 -- TRIGGER: after_update_transaction
 -- Cập nhật lại thống kê khi sửa giao dịch
 -- =====================================
+CREATE TRIGGER `after_update_transaction` AFTER UPDATE ON `transactions` FOR EACH ROW BEGIN
+  DECLARE v_type VARCHAR(20);
+  DECLARE v_period VARCHAR(20);
+  DECLARE v_budget DECIMAL(12,2);
+  DECLARE v_start DATE;
+  DECLARE v_end DATE;
+  DECLARE v_spent DECIMAL(12,2);
+
+  -- Lấy loại giao dịch
+  SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
+  SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
+
+  -- 1. Cập nhật lại statistics: trừ tiền đã xóa
+  UPDATE statistics
+  SET total_amount = total_amount - OLD.amount
+  WHERE user_id = OLD.user_id
+    AND type = v_type
+    AND period_type = 'month'
+    AND period_value = v_period;
+
+  -- Xóa record nếu số tiền sau cập nhật = 0 hoặc âm
+  DELETE FROM statistics
+  WHERE user_id = OLD.user_id
+    AND type = v_type
+    AND period_type = 'month'
+    AND period_value = v_period
+    AND total_amount <= 0;
+
+  -- 2. Nếu là giao dịch chi tiêu thì cập nhật ngân sách
+  IF v_type = 'expense' THEN
+    -- Tìm ngân sách phù hợp với thời gian giao dịch đã xóa
+    SELECT amount, start_date, end_date
+    INTO v_budget, v_start, v_end
+    FROM budgets
+    WHERE user_id = OLD.user_id
+      AND category_id = OLD.category_id
+      AND start_date <= OLD.transaction_date
+      AND end_date >= OLD.transaction_date
+    LIMIT 1;
+
+    -- Nếu có ngân sách thì cập nhật lại số đã chi
+    IF v_budget IS NOT NULL THEN
+      SELECT COALESCE(SUM(amount), 0) INTO v_spent
+      FROM transactions
+      WHERE user_id = OLD.user_id
+        AND category_id = OLD.category_id
+        AND transaction_date BETWEEN v_start AND v_end;
+
+      -- Không cần cập nhật bảng ngân sách nếu bạn không lưu `spent` ở đó,
+      -- nhưng bạn có thể log lại nếu cần.
+    END IF;
+  END IF;
+
+END
+$$
+DELIMITER ;
+
+-- =====================================
+-- TRIGGER: check_budget_before_insert
+-- Kiểm tra ngân sách trước khi thêm giao dịch
+-- =====================================
+
 DELIMITER $$
+CREATE TRIGGER `check_budget_before_insert` BEFORE INSERT ON `transactions` FOR EACH ROW BEGIN
+    DECLARE budget_exists INT;
 
-CREATE TRIGGER after_update_transaction
-AFTER UPDATE ON transactions
-FOR EACH ROW
-BEGIN
-  DECLARE v_old_type VARCHAR(20);
-  DECLARE v_new_type VARCHAR(20);
-  DECLARE v_old_period VARCHAR(20);
-  DECLARE v_new_period VARCHAR(20);
+    -- Kiểm tra xem có ngân sách nào cho danh mục này của user hay không (bỏ kiểm tra ngày tháng)
+    SELECT COUNT(*) INTO budget_exists
+    FROM budgets
+    WHERE user_id = NEW.user_id
+      AND category_id = NEW.category_id;
 
-  -- Lấy loại giao dịch cũ & mới
-  SELECT type INTO v_old_type FROM categories WHERE id = OLD.category_id;
-  SELECT type INTO v_new_type FROM categories WHERE id = NEW.category_id;
-
-  SET v_old_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
-  SET v_new_period = DATE_FORMAT(NEW.transaction_date, '%Y-%m');
-
-  -- Trừ số tiền cũ
-  IF v_old_type IN ('income', 'expense') THEN
-    UPDATE statistics
-    SET total_amount = total_amount - OLD.amount
-    WHERE user_id = OLD.user_id
-      AND type = v_old_type
-      AND period_type = 'month'
-      AND period_value = v_old_period;
-
-    -- Xóa nếu <= 0
-    DELETE FROM statistics
-    WHERE user_id = OLD.user_id
-      AND type = v_old_type
-      AND period_type = 'month'
-      AND period_value = v_old_period
-      AND total_amount <= 0;
-  END IF;
-
-  -- Cộng số tiền mới
-  IF v_new_type IN ('income', 'expense') THEN
-    INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
-    VALUES (NEW.user_id, v_new_type, 'month', v_new_period, NEW.amount)
-    ON DUPLICATE KEY UPDATE total_amount = total_amount + NEW.amount;
-  END IF;
-
-END$$
-
-DELIMITER;
+    -- Nếu không tồn tại thì báo lỗi
+    IF budget_exists = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Không có ngân sách cho danh mục này.';
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */
 -- ;

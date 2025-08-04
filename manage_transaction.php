@@ -31,17 +31,15 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
             die('không tìm thấy id danh mục, danh mục không tồn tại');
         }
         //thêm giao dịch vào transactions
-        $sql_transaction = $conn->prepare("
-            INSERT INTO transactions(user_id, category_id, amount, description, transaction_date, created_at) 
-            VALUES (:u_id, :c_id, :amount, :description, :trans_date, NOW())
-        ");
-        $sql_transaction->execute([
-            'u_id'=>$user_id,
-            'c_id'=>$category_id,
-            'amount'=>$amount,
-            'description'=>$description,
-            'trans_date'=>$transDate
+        $stmt = $conn->prepare("CALL AddTransaction(:user_id, :category_id, :amount, :description, :trans_date)");
+            $stmt->execute([
+            ':user_id' => $_SESSION['user_id'],
+            ':category_id' => $_POST['trans_category'],
+            ':amount' => $_POST['trans_amount'],
+            ':description' => $_POST['trans_description'],
+            ':trans_date' => $_POST['trans_date']
         ]);
+
         //quay lại trang chủ
         header('location: transactions.php');
         exit();

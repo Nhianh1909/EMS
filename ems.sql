@@ -698,7 +698,10 @@ COMMIT;
 
 -- Procedure
 
+-- =====================================
+-- PROCEDURE: AddTransaction
 -- Thêm giao dịch mới và cập nhật thống kê
+-- =====================================
 DELIMITER $$
 
 CREATE PROCEDURE AddTransaction(
@@ -708,32 +711,33 @@ CREATE PROCEDURE AddTransaction(
     IN p_description TEXT,
     IN p_transaction_date DATETIME
 )
-BEGIN 
-
-    -- Khởi tạo 2 biến gồm type thu nhập và chi tiêu , period là tháng năm của giao dịch
-    DECLARE v_type ENUM('income', 'expense');
+BEGIN
+    -- Khởi tạo biến type (income / expense) và period (tháng)
+    DECLARE v_type VARCHAR(20);
     DECLARE v_period VARCHAR(20);
-    -- Lấy type của categories thông qua biến khởi tạo v_type(ENUM) với điều kiện id của category = id categories trong transaction
+
+    -- Lấy type từ categories
     SELECT type INTO v_type FROM categories WHERE id = p_category_id;
+
     SET v_period = DATE_FORMAT(p_transaction_date, '%Y-%m');
 
     -- Chèn giao dịch mới
     INSERT INTO transactions (user_id, category_id, amount, description, transaction_date)
     VALUES (p_user_id, p_category_id, p_amount, p_description, p_transaction_date);
 
-    -- Cập nhật thống kê
+    -- Cập nhật statistics
     INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
     VALUES (p_user_id, v_type, 'month', v_period, p_amount)
-    -- Nếu gặp trùng key (trùng id) thì cộng thêm số tiền thay vì báo lỗi
-    ON DUPLICATE KEY UPDATE
-        total_amount = total_amount + p_amount;
+    ON DUPLICATE KEY UPDATE total_amount = total_amount + p_amount;
+
 END$$
 
 DELIMITER;
 
--- TRIGGER
-
--- TRIGGER để tự động cập nhật thống kê khi có giao dịch mới
+-- =====================================
+-- TRIGGER: after_insert_transaction
+-- Tự động cập nhật thống kê khi có giao dịch mới
+-- =====================================
 DELIMITER $$
 
 CREATE TRIGGER after_insert_transaction
@@ -749,7 +753,7 @@ BEGIN
     INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
     VALUES (NEW.user_id, 'expense', 'month', period, NEW.amount)
     ON DUPLICATE KEY UPDATE total_amount = total_amount + NEW.amount;
-  
+
   -- Nếu là thu nhập
   ELSEIF (SELECT type FROM categories WHERE id = NEW.category_id) = 'income' THEN
     INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
@@ -760,7 +764,10 @@ END$$
 
 DELIMITER;
 
--- TRIGGER để kiểm tra ngân sách trước khi thêm giao dịch chi tiêu
+-- =====================================
+-- TRIGGER: check_budget_before_insert
+-- Kiểm tra ngân sách trước khi thêm giao dịch chi tiêu
+-- =====================================
 DELIMITER $$
 
 CREATE TRIGGER check_budget_before_insert
@@ -775,7 +782,7 @@ BEGIN
   -- Chỉ kiểm tra nếu là chi tiêu
   IF (SELECT type FROM categories WHERE id = NEW.category_id) = 'expense' THEN
 
-    -- Lấy khoảng thời gian ngân sách có hiệu lực
+    -- Lấy ngân sách hiện tại
     SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
     FROM budgets
     WHERE user_id = NEW.user_id
@@ -792,7 +799,7 @@ BEGIN
         AND category_id = NEW.category_id
         AND transaction_date BETWEEN v_start AND v_end;
 
-      -- Cộng thêm giao dịch mới và kiểm tra
+      -- Nếu vượt thì báo lỗi
       IF (v_spent + NEW.amount) > v_budget THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Chi tiêu vượt quá ngân sách!';
@@ -801,6 +808,95 @@ BEGIN
 
   END IF;
 END$$
+
+DELIMITER;
+
+-- =====================================
+-- TRIGGER: after_delete_transaction
+-- Hoàn ngân sách khi xóa giao dịch
+-- =====================================
+DELIMITER $$
+
+CREATE TRIGGER after_delete_transaction
+AFTER DELETE ON transactions
+FOR EACH ROW
+BEGIN
+  DECLARE v_type VARCHAR(20);
+  DECLARE v_period VARCHAR(20);
+
+  -- Lấy loại giao dịch từ bảng categories
+  SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
+  SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
+
+  -- Trừ số tiền khỏi statistics
+  UPDATE statistics
+  SET total_amount = total_amount - OLD.amount
+  WHERE user_id = OLD.user_id
+    AND type = v_type
+    AND period_type = 'month'
+    AND period_value = v_period;
+
+  -- Nếu sau khi trừ còn <= 0 thì xóa luôn
+  DELETE FROM statistics
+  WHERE user_id = OLD.user_id
+    AND type = v_type
+    AND period_type = 'month'
+    AND period_value = v_period
+    AND total_amount <= 0;
+END$$
+
+DELIMITER;
+
+-- =====================================
+-- TRIGGER: after_update_transaction
+-- Cập nhật lại thống kê khi sửa giao dịch
+-- =====================================
+DELIMITER $$
+
+CREATE TRIGGER after_update_transaction
+AFTER UPDATE ON transactions
+FOR EACH ROW
+BEGIN
+  DECLARE v_old_type VARCHAR(20);
+  DECLARE v_new_type VARCHAR(20);
+  DECLARE v_old_period VARCHAR(20);
+  DECLARE v_new_period VARCHAR(20);
+
+  -- Lấy loại giao dịch cũ & mới
+  SELECT type INTO v_old_type FROM categories WHERE id = OLD.category_id;
+  SELECT type INTO v_new_type FROM categories WHERE id = NEW.category_id;
+
+  SET v_old_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
+  SET v_new_period = DATE_FORMAT(NEW.transaction_date, '%Y-%m');
+
+  -- Trừ số tiền cũ
+  IF v_old_type IN ('income', 'expense') THEN
+    UPDATE statistics
+    SET total_amount = total_amount - OLD.amount
+    WHERE user_id = OLD.user_id
+      AND type = v_old_type
+      AND period_type = 'month'
+      AND period_value = v_old_period;
+
+    -- Xóa nếu <= 0
+    DELETE FROM statistics
+    WHERE user_id = OLD.user_id
+      AND type = v_old_type
+      AND period_type = 'month'
+      AND period_value = v_old_period
+      AND total_amount <= 0;
+  END IF;
+
+  -- Cộng số tiền mới
+  IF v_new_type IN ('income', 'expense') THEN
+    INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
+    VALUES (NEW.user_id, v_new_type, 'month', v_new_period, NEW.amount)
+    ON DUPLICATE KEY UPDATE total_amount = total_amount + NEW.amount;
+  END IF;
+
+END$$
+
+DELIMITER;
 
 -- /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */
 -- ;

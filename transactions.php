@@ -207,14 +207,11 @@ if ($selectedType !== 'all') {
             <button id="close-modal-btn" class="close-button">&times;</button>
         </div>
         <div class="modal-body">
-            <?php
-            foreach($getIdTrans as $getID):
-
-            ?>
-            <form id="transaction-form" action="manage_transation.php" method="POST">
+     
+            <form id="transaction-form" action="manage_transaction.php" method="POST">
                 <input type="hidden" id="trans-id"name='action' value="add">
-                <input type="hidden" id="trans-id"name='action' value="edit">
-                <input type="hidden" name="transaction_id" value="<?= htmlspecialchars($getID['id']) ?>">
+                <!-- <input type="hidden" id="trans-id"name='action' value="edit"> -->
+                <!-- <input type="hidden" name="transaction_id" value="<?= htmlspecialchars($getID['id']) ?>"> -->
                 <div class="form-row">
                     <div class="form-group-modal">
                         <label for="trans-type">Loại giao dịch</label>
@@ -256,9 +253,7 @@ if ($selectedType !== 'all') {
                     <button type="submit" id="save-btn" class="btn btn-primary">Lưu Giao dịch</button>
                 </div>
             </form>
-            <?php
-            endforeach;
-            ?>
+     
         </div>
     </div>
 </div>

@@ -37,7 +37,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
                 $sql = $conn->prepare("INSERT INTO budgets(user_id, category_id, amount, start_date, end_date, created_at)
                                         VALUES(:u_id, :c_id, :amount, :start_date, :end_date, NOW())
                 ");
-                $sql->execute([
+                $sql->execute([ 
                     'u_id' => $user_id,
                     'c_id' => $category_id,
                     'amount' => $budgetsAmount,

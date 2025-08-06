@@ -13,41 +13,50 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
         if($action == 'add'){
             $budgetsAmount = $_POST['budget_amount'];
             $startDate = $_POST['start_date'];
-            $enDate = $_POST['end_date'];
+            $endDate = $_POST['end_date'];
+            $trans_date = $_POST['trans_date'] ?? date('Y-m-d');
             $category_id = isset($_POST['budget_category_id']) ? trim($_POST['budget_category_id']) : '';
-            echo $category_id;
+            // echo $category_id;
 
             if (empty($category_id)) {
                 die('Thiếu category_id!');
             }
 
 
-            //lấy dữ liệu
-            $sql_check = $conn->prepare("SELECT * FROM budgets WHERE user_id = :u_id AND category_id = :c_id");
+            //kiểm tra xem ngân sách có phù hợp ko
+            $sql_check = $conn->prepare("SELECT id FROM budgets WHERE user_id = :u_id AND category_id = :c_id
+            AND :tran_date BETWEEN start_date AND end_date LIMIT 1");
             $sql_check->execute([
                 'u_id' => $user_id,
                 'c_id' => $category_id,
+                'tran_date' => $trans_date,
             ]);
-            $budget = $sql_check->fetchAll(PDO::FETCH_ASSOC);
-            //check xem ngân sách này đã tồn tại chưa
-            if($budget){
-                echo"<script><alert>Ngân sách này đã tồn tại</alert></script>";
-            
-            }else{
-                $sql = $conn->prepare("INSERT INTO budgets(user_id, category_id, amount, start_date, end_date, created_at)
-                                        VALUES(:u_id, :c_id, :amount, :start_date, :end_date, NOW())
-                ");
-                $sql->execute([ 
-                    'u_id' => $user_id,
-                    'c_id' => $category_id,
-                    'amount' => $budgetsAmount,
-                    'start_date' => $startDate,
-                    'end_date' => $enDate,
+            $budgets = $sql_check->fetchAll(PDO::FETCH_ASSOC);
+        
+            if ($budgets) {
+                    // ❗ Ngân sách đã tồn tại → hiện alert và quay lại
+                    echo "<script>
+                        alert('Ngân sách đã tồn tại!');
+                        window.location.href = 'budgets.php';
+                    </script>";
+                    exit();
+            }//nếu ko có thì thêm mới
+            $sql_add = $conn->prepare(
+                    "INSERT INTO budgets (user_id, category_id, amount, start_date, end_date, created_at) 
+                    VALUES (:u_id, :c_id, :amount, :start_date, :end_date, NOW())"
+                );
+                $sql_add->execute([
+                    "u_id" => $user_id,
+                    "c_id" => $category_id,
+                    "amount" => $budgetsAmount,
+                    "start_date" => $startDate,
+                    "end_date" => $endDate
                 ]);
 
+                
                 header("Location: budgets.php");
                 exit();
-            }
+            
     }
     if($action == 'edit'){
         $category_id = $_POST['category_id'];

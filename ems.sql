@@ -40,7 +40,7 @@ CREATE TABLE `budgets` (
     `start_date` date NOT NULL,
     `end_date` date NOT NULL,
     `created_at` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `budgets`
@@ -156,11 +156,11 @@ VALUES (
 CREATE TABLE `categories` (
     `id` int NOT NULL,
     `user_id` int NOT NULL,
-    `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `type` enum('income', 'expense') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+    `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `type` enum('income', 'expense') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
     `created_at` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `categories`
@@ -254,12 +254,12 @@ VALUES (
 CREATE TABLE `statistics` (
     `id` int NOT NULL,
     `user_id` int NOT NULL,
-    `type` enum('income', 'expense') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `period_type` enum('day', 'month', 'year') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `period_value` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+    `type` enum('income', 'expense') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `period_type` enum('day', 'month', 'year') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `period_value` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
     `total_amount` decimal(12, 2) NOT NULL,
     `created_at` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `statistics`
@@ -323,10 +323,10 @@ CREATE TABLE `transactions` (
     `user_id` int NOT NULL,
     `category_id` int NOT NULL,
     `amount` decimal(12, 2) NOT NULL,
-    `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
+    `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
     `transaction_date` datetime NOT NULL,
     `created_at` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `transactions`
@@ -459,12 +459,12 @@ VALUES (
 
 CREATE TABLE `users` (
     `id` int NOT NULL,
-    `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-    `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+    `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
     `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
     `avatar` longblob
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `users`
@@ -696,26 +696,30 @@ ADD CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `cat
 
 COMMIT;
 
--- Procedure
+-- --------------------------------------------------------
+-- 2. STORED PROCEDURES
+-- --------------------------------------------------------
 
--- =====================================
--- PROCEDURE: AddTransaction
--- Thêm giao dịch mới và cập nhật thống kê
--- =====================================
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddTransaction` (IN `p_user_id` INT, IN `p_category_id` INT, IN `p_amount` DECIMAL(12,2), IN `p_description` TEXT, IN `p_transaction_date` DATETIME)   BEGIN
+DELIMITER $$
+
+CREATE PROCEDURE `AddTransaction` (
+    IN `p_user_id` INT,
+    IN `p_category_id` INT,
+    IN `p_amount` DECIMAL(12,2),
+    IN `p_description` TEXT,
+    IN `p_transaction_date` DATETIME
+)
+BEGIN
     DECLARE v_type ENUM('income', 'expense');
     DECLARE v_budget_id INT;
     DECLARE v_budget_limit DECIMAL(12,2);
     DECLARE v_total_spent DECIMAL(12,2);
 
-    -- Lấy loại (type) của danh mục
     SELECT type INTO v_type
     FROM categories
     WHERE id = p_category_id;
 
-    -- Nếu là chi tiêu thì kiểm tra ngân sách
     IF v_type = 'expense' THEN
-        -- Tìm ngân sách phù hợp theo category và transaction_date nằm trong khoảng thời gian đó
         SELECT id, amount INTO v_budget_id, v_budget_limit
         FROM budgets
         WHERE category_id = p_category_id
@@ -723,13 +727,11 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddTransaction` (IN `p_user_id` INT
           AND p_transaction_date BETWEEN start_date AND end_date
         LIMIT 1;
 
-        -- Nếu không có ngân sách phù hợp thì báo lỗi
         IF v_budget_id IS NULL THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Không có ngân sách cho danh mục này trong thời gian hiện tại.';
         END IF;
 
-        -- Tính tổng chi tiêu hiện tại của danh mục đó trong khoảng thời gian ngân sách
         SELECT COALESCE(SUM(amount), 0) INTO v_total_spent
         FROM transactions
         WHERE category_id = p_category_id
@@ -740,54 +742,24 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddTransaction` (IN `p_user_id` INT
               SELECT end_date FROM budgets WHERE id = v_budget_id
           );
 
-        -- Kiểm tra nếu vượt quá ngân sách thì báo lỗi
         IF (v_total_spent + p_amount) > v_budget_limit THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Chi tiêu vượt quá ngân sách cho danh mục này!';
         END IF;
     END IF;
 
-    -- Thêm giao dịch vào bảng
     INSERT INTO transactions (user_id, category_id, amount, description, transaction_date)
     VALUES (p_user_id, p_category_id, p_amount, p_description, p_transaction_date);
 END$$
 
-DELIMITER ;
--- =====================================
--- TRIGGER: after_insert_transaction
--- Tự động cập nhật thống kê khi có giao dịch mới
--- =====================================
-DELIMITER $$
-
-CREATE TRIGGER after_insert_transaction
-AFTER INSERT ON transactions
-FOR EACH ROW
-BEGIN
-  DECLARE period VARCHAR(20);
-
-  SET period = DATE_FORMAT(NEW.transaction_date, '%Y-%m');
-
-  -- Nếu là chi tiêu
-  IF (SELECT type FROM categories WHERE id = NEW.category_id) = 'expense' THEN
-    INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
-    VALUES (NEW.user_id, 'expense', 'month', period, NEW.amount)
-    ON DUPLICATE KEY UPDATE total_amount = total_amount + NEW.amount;
-
-  -- Nếu là thu nhập
-  ELSEIF (SELECT type FROM categories WHERE id = NEW.category_id) = 'income' THEN
-    INSERT INTO statistics (user_id, type, period_type, period_value, total_amount)
-    VALUES (NEW.user_id, 'income', 'month', period, NEW.amount)
-    ON DUPLICATE KEY UPDATE total_amount = total_amount + NEW.amount;
-  END IF;
-END$$
-
 DELIMITER;
 
--- =====================================
--- TRIGGER: after_delete_transaction
--- Hoàn ngân sách khi xóa giao dịch
--- =====================================
+-- --------------------------------------------------------
+-- 3. TRIGGERS
+-- --------------------------------------------------------
+
 DELIMITER $$
+
 CREATE TRIGGER `after_delete_transaction` AFTER DELETE ON `transactions` FOR EACH ROW BEGIN
   DECLARE v_type VARCHAR(20);
   DECLARE v_period VARCHAR(20);
@@ -796,58 +768,36 @@ CREATE TRIGGER `after_delete_transaction` AFTER DELETE ON `transactions` FOR EAC
   DECLARE v_end DATE;
   DECLARE v_spent DECIMAL(12,2);
 
-  -- Lấy loại giao dịch
   SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
   SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
 
-  -- 1. Cập nhật lại statistics: trừ tiền đã xóa
   UPDATE statistics
   SET total_amount = total_amount - OLD.amount
-  WHERE user_id = OLD.user_id
-    AND type = v_type
-    AND period_type = 'month'
-    AND period_value = v_period;
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period;
 
-  -- Xóa record nếu số tiền sau cập nhật = 0 hoặc âm
   DELETE FROM statistics
-  WHERE user_id = OLD.user_id
-    AND type = v_type
-    AND period_type = 'month'
-    AND period_value = v_period
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period
     AND total_amount <= 0;
 
-  -- 2. Nếu là giao dịch chi tiêu thì cập nhật ngân sách
   IF v_type = 'expense' THEN
-    -- Tìm ngân sách phù hợp với thời gian giao dịch đã xóa
-    SELECT amount, start_date, end_date
-    INTO v_budget, v_start, v_end
+    SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
     FROM budgets
-    WHERE user_id = OLD.user_id
-      AND category_id = OLD.category_id
-      AND start_date <= OLD.transaction_date
-      AND end_date >= OLD.transaction_date
+    WHERE user_id = OLD.user_id AND category_id = OLD.category_id
+      AND start_date <= OLD.transaction_date AND end_date >= OLD.transaction_date
     LIMIT 1;
 
-    -- Nếu có ngân sách thì cập nhật lại số đã chi
     IF v_budget IS NOT NULL THEN
       SELECT COALESCE(SUM(amount), 0) INTO v_spent
       FROM transactions
-      WHERE user_id = OLD.user_id
-        AND category_id = OLD.category_id
+      WHERE user_id = OLD.user_id AND category_id = OLD.category_id
         AND transaction_date BETWEEN v_start AND v_end;
-
-      -- Không cần cập nhật bảng ngân sách nếu bạn không lưu `spent` ở đó,
-      -- nhưng bạn có thể log lại nếu cần.
     END IF;
   END IF;
 
-END
-$$
-DELIMITER ;
--- =====================================
--- TRIGGER: after_update_transaction
--- Cập nhật lại thống kê khi sửa giao dịch
--- =====================================
+END$$
+
 CREATE TRIGGER `after_update_transaction` AFTER UPDATE ON `transactions` FOR EACH ROW BEGIN
   DECLARE v_type VARCHAR(20);
   DECLARE v_period VARCHAR(20);
@@ -856,82 +806,55 @@ CREATE TRIGGER `after_update_transaction` AFTER UPDATE ON `transactions` FOR EAC
   DECLARE v_end DATE;
   DECLARE v_spent DECIMAL(12,2);
 
-  -- Lấy loại giao dịch
   SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
   SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
 
-  -- 1. Cập nhật lại statistics: trừ tiền đã xóa
   UPDATE statistics
   SET total_amount = total_amount - OLD.amount
-  WHERE user_id = OLD.user_id
-    AND type = v_type
-    AND period_type = 'month'
-    AND period_value = v_period;
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period;
 
-  -- Xóa record nếu số tiền sau cập nhật = 0 hoặc âm
   DELETE FROM statistics
-  WHERE user_id = OLD.user_id
-    AND type = v_type
-    AND period_type = 'month'
-    AND period_value = v_period
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period
     AND total_amount <= 0;
 
-  -- 2. Nếu là giao dịch chi tiêu thì cập nhật ngân sách
   IF v_type = 'expense' THEN
-    -- Tìm ngân sách phù hợp với thời gian giao dịch đã xóa
-    SELECT amount, start_date, end_date
-    INTO v_budget, v_start, v_end
+    SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
     FROM budgets
-    WHERE user_id = OLD.user_id
-      AND category_id = OLD.category_id
-      AND start_date <= OLD.transaction_date
-      AND end_date >= OLD.transaction_date
+    WHERE user_id = OLD.user_id AND category_id = OLD.category_id
+      AND start_date <= OLD.transaction_date AND end_date >= OLD.transaction_date
     LIMIT 1;
 
-    -- Nếu có ngân sách thì cập nhật lại số đã chi
     IF v_budget IS NOT NULL THEN
       SELECT COALESCE(SUM(amount), 0) INTO v_spent
       FROM transactions
-      WHERE user_id = OLD.user_id
-        AND category_id = OLD.category_id
+      WHERE user_id = OLD.user_id AND category_id = OLD.category_id
         AND transaction_date BETWEEN v_start AND v_end;
-
-      -- Không cần cập nhật bảng ngân sách nếu bạn không lưu `spent` ở đó,
-      -- nhưng bạn có thể log lại nếu cần.
     END IF;
   END IF;
 
-END
-$$
-DELIMITER ;
+END$$
 
--- =====================================
--- TRIGGER: check_budget_before_insert
--- Kiểm tra ngân sách trước khi thêm giao dịch
--- =====================================
+-- CREATE TRIGGER `check_budget_before_insert` BEFORE INSERT ON `transactions` FOR EACH ROW BEGIN
+--   DECLARE budget_exists INT;
 
-DELIMITER $$
-CREATE TRIGGER `check_budget_before_insert` BEFORE INSERT ON `transactions` FOR EACH ROW BEGIN
-    DECLARE budget_exists INT;
+--   SELECT COUNT(*) INTO budget_exists
+--   FROM budgets
+--   WHERE user_id = NEW.user_id AND category_id = NEW.category_id;
 
-    -- Kiểm tra xem có ngân sách nào cho danh mục này của user hay không (bỏ kiểm tra ngày tháng)
-    SELECT COUNT(*) INTO budget_exists
-    FROM budgets
-    WHERE user_id = NEW.user_id
-      AND category_id = NEW.category_id;
+--   IF budget_exists = 0 THEN
+--     SIGNAL SQLSTATE '45000'
+--     SET MESSAGE_TEXT = 'Không có ngân sách cho danh mục này.';
+--   END IF;
 
-    -- Nếu không tồn tại thì báo lỗi
-    IF budget_exists = 0 THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Không có ngân sách cho danh mục này.';
-    END IF;
-END
-$$
-DELIMITER ;
+-- END$$
 
--- /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */
--- ;
--- /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */
--- ;
--- /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */
--- ;
+-- DELIMITER;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */
+;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */
+;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */
+;

@@ -21,33 +21,44 @@ $categoryIcons = [
     'Khác'      => ['icon' => 'bx-dots-horizontal-rounded', 'color' => '#6b7280']
 ];
 
-// 2. Truy vấn ngân sách kèm tổng chi tiêu
+//sql truy vấn lấy ra toàn bộ thông tin budgets có danh mục trùng vs categories ứng với transaction, điều kiện là phải thời gian hiện tại
 $sql = "
-        SELECT 
-        b.category_id AS category_id,
-        c.name AS category_name,
-        b.amount AS total_budget,
-        c.type AS category_type,
-        COALESCE(SUM(t.amount), 0) AS total_spent
-    FROM budgets b
-    JOIN categories c ON b.category_id = c.id
-    LEFT JOIN transactions t ON b.category_id = t.category_id
-    WHERE b.user_id = :user_id AND c.type = 'expense'
-    GROUP BY b.category_id, c.name, b.amount, c.type
+SELECT
+    b.category_id AS category_id,
+    c.name AS category_name,
+    b.amount AS total_budget,
+    c.type AS category_type,
+    COALESCE(SUM(t.amount), 0) AS total_spent
+FROM budgets b
+JOIN categories c ON b.category_id = c.id
+LEFT JOIN transactions t ON b.category_id = t.category_id
+    AND MONTH(t.transaction_date) = MONTH(CURDATE())
+    AND YEAR(t.transaction_date) = YEAR(CURDATE())
+WHERE b.user_id = :user_id
+  AND c.type = 'expense'
+  AND MONTH(b.start_date) = MONTH(CURDATE())
+  AND YEAR(b.start_date) = YEAR(CURDATE())
+  AND MONTH(b.end_date) = MONTH(CURDATE())
+  AND YEAR(b.end_date) = YEAR(CURDATE())
+GROUP BY b.category_id, c.name, b.amount, c.type
 ";
 
-
-    // LEFT JOIN transactions t ON b.category_id = t.category_id
 $stmt = $conn->prepare($sql);
-$stmt->execute(['user_id' => $_SESSION['user_id']]);
+$stmt->execute([
+    'user_id' => $_SESSION['user_id'],
+]);
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// echo '<pre>';
-// print_r($results);
-// echo '</pre>';
 // 3. Gộp dữ liệu và ánh xạ icon
 $budgets = [];
+$transactions = [];
 foreach ($results as $row) {
+    // if (!empty($row['transaction_amount']) && !empty($row['description'])) {
+    //     $transactions[] = [
+    //         'amount' => $row['transaction_amount'],
+    //         'description' => $row['description']
+    //     ];
+    // }
     $categoryName = $row['category_name'];
     $limit = (int)$row['total_budget'];
     $spent = (int)$row['total_spent'];
@@ -152,11 +163,21 @@ foreach ($results as $row) {
         <div class="modal-body">
             <form id="budget-form" action="manage_budget.php" method="POST">
                 <input type="hidden" name="action" value="add">
+               <!-- <?php foreach ($transactions as $t): 
+                // echo '<pre>';
+                // print_r($t);
+                // echo '</pre>';
+                ?>
+                
+                    <input type="hidden" name="t_amount[]" value="<?= htmlspecialchars($t['amount']) ?>">
+                    <input type="hidden" name="t_description[]" value="<?= htmlspecialchars($t['description']) ?>">
+                <?php endforeach; ?> -->
+
                 <div class="form-group-modal">
                     <label for="budget-category-id">Danh mục</label>
                     <select id="budget-category-id" name="budget_category_id" required>
                         <?php
-                        $sql_cate = $conn->prepare("SELECT * FROM categories WHERE user_id = :u_id");
+                        $sql_cate = $conn->prepare("SELECT * FROM categories WHERE user_id = :u_id AND type = 'expense'");
                         $sql_cate->execute(['u_id' =>$_SESSION['user_id']]);
                         $categories = $sql_cate->fetchAll(PDO::FETCH_ASSOC);
                         foreach ($categories as $cat): ?>

@@ -171,3 +171,14 @@ function previewImage(event) {
     preview.style.display = "block";
 }
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    });
+</script>

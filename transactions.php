@@ -596,5 +596,17 @@ console.log('Quay lại sau:', backToAddBtn.classList);
 
 </script>
 
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    });
+</script>
+
 </body>
 </html>

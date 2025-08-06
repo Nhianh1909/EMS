@@ -6,7 +6,7 @@
     --main-bg: #f7f8fc;
     --text-primary: #1a202c;
     --text-secondary: #718096;
-    --card-bg: rgba(255, 255, 255, 0.9); /* Làm thẻ hơi trong suốt để thấy nền */
+    --card-bg: rgba(255, 255, 255, 0.9);
     --border-color: #e2e8f0;
     --income-color: #22c55e;
     --expense-color: #ef4444;
@@ -21,6 +21,7 @@
 
 body {
     background-color: var(--main-bg);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* --- BỐ CỤC CHÍNH --- */
@@ -37,8 +38,8 @@ body {
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border-color);
-    transition: width 0.3s ease;
-    z-index: 10; /* Đảm bảo sidebar nằm trên nền */
+    transition: width 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    z-index: 10;
 }
 
 .sidebar-header {
@@ -132,11 +133,10 @@ body {
 .main-content {
     flex-grow: 1;
     padding: 30px;
-    overflow: hidden; /* Ẩn phần thừa của hiệu ứng nền */
-    position: relative; /* Cần thiết cho pseudo-element ::before */
+    overflow: hidden;
+    position: relative;
 }
 
-/* === HIỆU ỨNG NỀN LUNG LINH (NÂNG CẤP) === */
 .main-content::before {
     content: '';
     position: absolute;
@@ -150,7 +150,8 @@ body {
         radial-gradient(circle at 50% 50%, rgba(0, 204, 255, 0.15), transparent 50%);
     background-size: 250% 250%;
     animation: fluidGradient 20s ease-in-out infinite alternate;
-    z-index: 0; /* Đảm bảo nền nằm dưới nội dung */
+    z-index: 0;
+    transition: opacity 0.3s ease;
 }
 
 @keyframes fluidGradient {
@@ -159,21 +160,16 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-
 .main-header, .overview-cards, .main-section, .transactions-page-container, .reports-grid, .accounts-summary-card, .accounts-grid, .budgets-grid, .profile-settings-container {
-    position: relative; /* Đảm bảo nội dung nằm trên hiệu ứng nền */
+    position: relative;
     z-index: 1;
 }
-
 
 .main-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-}
-.header-left{
-    max-width: 60%;
 }
 
 .header-left h1 {
@@ -183,24 +179,12 @@ body {
 .welcome-message {
     color: var(--text-secondary);
 }
-.header-end{
-    display: flex;
-}
+
 .header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-left: 10px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-
+    gap: 15px;
 }
-/* .header-left {  
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-} */
 
 .search-bar {
     display: flex;
@@ -268,7 +252,7 @@ body {
     display: flex;
     align-items: center;
     gap: 20px;
-    transition: transform 0.2s ease-out; /* Thêm transition cho hiệu ứng nam châm */
+    transition: transform 0.2s ease-out;
 }
 
 .card-icon {
@@ -315,13 +299,12 @@ body {
     font-weight: 500;
 }
 
-/* Danh sách giao dịch */
 .transactions-container, .analysis-container {
     background-color: var(--card-bg);
     padding: 20px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    transition: transform 0.2s ease-out; /* Thêm transition cho hiệu ứng nam châm */
+    transition: transform 0.2s ease-out;
 }
 
 .transaction-list {
@@ -373,7 +356,6 @@ body {
     color: var(--expense-color);
 }
 
-/* Phân tích chi tiêu */
 .chart-container {
     display: flex;
     justify-content: center;
@@ -446,7 +428,7 @@ body {
 @media (max-width: 992px) {
     .sidebar {
         position: fixed;
-        left: -260px; /* Ẩn sidebar */
+        left: -260px;
         z-index: 1000;
         height: 100%;
     }
@@ -466,12 +448,11 @@ body {
         width: 100%;
     }
     .primary-btn span {
-        display: none; /* Ẩn chữ trên nút nhỏ */
+        display: none;
     }
 }
 
-/* === PHẦN CSS BỔ SUNG CHO TRANG GIAO DỊCH === */
-
+/* === TRANG GIAO DỊCH === */
 .nav-divider {
     border: none;
     border-top: 1px solid var(--border-color);
@@ -515,7 +496,7 @@ body {
 }
 
 .transactions-table-wrapper {
-    overflow-x: auto; /* Giúp bảng có thể cuộn ngang trên màn hình nhỏ */
+    overflow-x: auto;
 }
 
 .transaction-table {
@@ -575,176 +556,173 @@ body {
     color: var(--expense-color);
 }
 
-    /* === CSS BỔ SUNG CHO MODAL THÊM GIAO DỊCH === */
+/* === MODAL THÊM GIAO DỊCH === */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
 
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        opacity: 1;
-        transition: opacity 0.3s ease;
-    }
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
 
-    .modal-overlay.hidden {
-        opacity: 0;
-        pointer-events: none; /* Làm cho không thể click khi bị ẩn */
-    }
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 500px;
+    transform: translateY(0);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
 
-    .modal-content {
-        background-color: white;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        width: 100%;
-        max-width: 500px;
-        transform: translateY(0);
-        transition: transform 0.3s ease, opacity 0.3s ease;
-    }
+.modal-overlay.hidden .modal-content {
+    transform: translateY(-20px);
+}
 
-    .modal-overlay.hidden .modal-content {
-        transform: translateY(-20px);
-    }
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
 
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 15px;
-        margin-bottom: 20px;
-    }
+.modal-header h2 {
+    font-size: 22px;
+    color: var(--text-primary);
+}
 
-    .modal-header h2 {
-        font-size: 22px;
-        color: var(--text-primary);
-    }
+.close-button {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    line-height: 1;
+}
 
-    .close-button {
-        background: none;
-        border: none;
-        font-size: 28px;
-        cursor: pointer;
-        color: var(--text-secondary);
-        line-height: 1;
-    }
+.modal-body .form-row {
+    display: flex;
+    gap: 20px;
+}
 
-    .modal-body .form-row {
-        display: flex;
-        gap: 20px;
-    }
+.modal-body .form-row .form-group-modal {
+    flex: 1;
+}
 
-    .modal-body .form-row .form-group-modal {
-        flex: 1;
-    }
+.form-group-modal {
+    margin-bottom: 15px;
+}
 
-    .form-group-modal {
-        margin-bottom: 15px;
-    }
+.form-group-modal label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
 
-    .form-group-modal label {
-        display: block;
-        font-weight: 500;
-        margin-bottom: 8px;
-        color: var(--text-primary);
-    }
+.form-group-modal input,
+.form-group-modal select,
+.form-group-modal textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+}
 
-    .form-group-modal input,
-    .form-group-modal select,
-    .form-group-modal textarea {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        font-size: 16px;
-        font-family: 'Poppins', sans-serif;
-        transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
-    }
+.form-group-modal input:focus,
+.form-group-modal select:focus,
+.form-group-modal textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.2);
+}
 
-    .form-group-modal input:focus,
-    .form-group-modal select:focus,
-    .form-group-modal textarea:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.2);
-    }
+.form-group-modal textarea {
+    resize: vertical;
+    min-height: 80px;
+}
 
-    .form-group-modal textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
+.form-group-modal input.income-text {
+    color: var(--income-color) !important;
+    font-weight: 600;
+}
 
-    .form-group-modal input.income-text {
-        color: var(--income-color) !important;
-        font-weight: 600;
-    }
+.form-group-modal input.expense-text {
+    color: var(--expense-color) !important;
+    font-weight: 600;
+}
 
-    .form-group-modal input.expense-text {
-        color: var(--expense-color) !important;
-        font-weight: 600;
-    }
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
 
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
 
-    .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border-color);
-    }
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
 
-    .btn {
-        padding: 10px 20px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: var(--text-secondary);
+}
+.btn-secondary:hover {
+    background-color: #cbd5e1;
+}
 
-    .btn-primary {
-        background-color: var(--primary-color);
-        color: white;
-    }
-    .btn-primary:hover {
-        background-color: var(--primary-hover);
-    }
+.modal-content.modal-sm {
+    max-width: 400px;
+}
 
-    .btn-secondary {
-        background-color: #e2e8f0;
-        color: var(--text-secondary);
-    }
-    .btn-secondary:hover {
-        background-color: #cbd5e1;
-    }
+.modal-sm .modal-body p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
 
-    .modal-content.modal-sm {
-        max-width: 400px;
-    }
+.btn-danger {
+    background-color: var(--expense-color);
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #c82333;
+}
 
-    .modal-sm .modal-body p {
-        color: var(--text-secondary);
-        line-height: 1.6;
-    }
-
-    .btn-danger {
-        background-color: var(--expense-color);
-        color: white;
-    }
-    .btn-danger:hover {
-        background-color: #c82333;
-    }
-
-/* === CSS BỔ SUNG CHO TRANG BÁO CÁO === */
-
+/* === TRANG BÁO CÁO === */
 .reports-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -765,7 +743,6 @@ body {
     margin-bottom: 25px;
 }
 
-/* Biểu đồ cột */
 .bar-chart-placeholder {
     display: flex;
     justify-content: space-around;
@@ -812,7 +789,6 @@ body {
     font-weight: 500;
 }
 
-/* Biểu đồ tròn */
 .pie-chart-container {
     display: flex;
     align-items: center;
@@ -827,8 +803,7 @@ body {
     animation: spinIn 1s ease-out forwards;
 }
 
-/* === CSS BỔ SUNG CHO TRANG TÀI KHOẢN (PROFILE SETTINGS) === */
-
+/* === TRANG TÀI KHOẢN (PROFILE SETTINGS) === */
 .profile-settings-container {
     background-color: var(--card-bg);
     border-radius: 12px;
@@ -875,8 +850,7 @@ body {
     margin-top: 25px;
 }
 
-/* === CSS BỔ SUNG CHO TRANG NGÂN SÁCH === */
-
+/* === TRANG NGÂN SÁCH === */
 .budgets-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -890,7 +864,7 @@ body {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    cursor: pointer; /* Thêm con trỏ để cho biết có thể click */
+    cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -933,7 +907,7 @@ body {
 .progress-fill {
     height: 100%;
     border-radius: 4px;
-    transition: width 1s ease-out; /* Thêm hiệu ứng cho thanh tiến trình */
+    transition: width 1s ease-out;
 }
 
 .budget-details {
@@ -951,52 +925,102 @@ body {
 .budget-card-footer {
     border-top: 1px solid var(--border-color);
     padding-top: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    text-align: center;
     font-size: 14px;
     color: var(--text-secondary);
     font-weight: 500;
 }
-.budget-actions {
-    margin-top: 8px;
+
+/* === TRANG CÀI ĐẶT === */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 30px;
 }
-.budget-actions button {
-    background: none;
-    border: none;
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.setting-item p {
+    color: var(--text-secondary);
+    max-width: 400px;
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 24px;
+    color: var(--text-secondary);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
     cursor: pointer;
-    font-size: 18px;
-    margin-left: 8px;
-}
-.btn-edit i { color: #3b82f6; }   /* xanh */
-.btn-delete i { color: #ef4444; } /* đỏ */
-.hidden {
-  display: none !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
 }
 
-/* === ĐỊNH NGHĨA HIỆU ỨNG (KEYFRAMES) === */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
 
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* === HIỆU ỨNG === */
 @keyframes growUp {
-    from {
-        transform: scaleY(0);
-    }
-    to {
-        transform: scaleY(1);
-    }
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
 }
 
 @keyframes spinIn {
-    from {
-        transform: rotate(-180deg);
-        opacity: 0;
-    }
-    to {
-        transform: rotate(0deg);
-        opacity: 1;
-    }
+    from { transform: rotate(-180deg); opacity: 0; }
+    to { transform: rotate(0deg); opacity: 1; }
 }
 
-/* === HIỆU ỨNG XUẤT HIỆN CHO CÁC THÀNH PHẦN === */
 .animated-card, .animated-li {
     opacity: 0;
     transform: translateY(20px);
@@ -1004,12 +1028,52 @@ body {
 }
 
 @keyframes fadeInSlideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === DARK MODE === */
+body.dark-mode {
+    --sidebar-bg: #1f2937;
+    --main-bg: #111827;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --card-bg: rgba(31, 41, 55, 0.9);
+    --border-color: #374151;
+}
+
+body.dark-mode .main-content::before {
+    opacity: 0.5;
+}
+
+body.dark-mode .search-bar, 
+body.dark-mode .action-button,
+body.dark-mode .filter-group select,
+body.dark-mode .transaction-table thead th {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+body.dark-mode .transaction-table tbody tr:hover {
+    background-color: #374151;
+}
+
+body.dark-mode .form-group-modal input,
+body.dark-mode .form-group-modal select,
+body.dark-mode .form-group-modal textarea {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: var(--text-primary);
+}
+
+body.dark-mode .form-group-modal input[readonly] {
+    background-color: #1f2937;
+}
+
+body.dark-mode .btn-secondary {
+    background-color: #4b5563;
+    color: var(--text-primary);
+}
+body.dark-mode .btn-secondary:hover {
+    background-color: #6b7280;
 }

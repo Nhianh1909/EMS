@@ -228,5 +228,16 @@ $gradient = rtrim($gradient, ', ');//dùng rtrim để bỏ dấu phẩy vì cá
     </main>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+    });
+</script>
+
 </body>
 </html>

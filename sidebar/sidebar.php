@@ -37,10 +37,10 @@ if (!empty($user_info['avatar'])) {
                 <li><a href="transactions.php"><i class='bx bx-transfer-alt'></i><span>Giao dịch</span></a></li>
                 <li><a href="reports.php"><i class='bx bx-bar-chart-square'></i><span>Báo cáo</span></a></li>
                 <li><a href="budgets.php"><i class='bx bx-pie-chart-alt-2'></i><span>Ngân sách</span></a></li>
-                <li><a href="#"><i class='bx bxs-flag-checkered'></i><span>Mục tiêu Tiết kiệm</span></a></li>
+                <li><a href="goals.php"><i class='bx bxs-flag-checkered'></i><span>Mục tiêu Tiết kiệm</span></a></li>
                 <li><a href="#"><i class='bx bx-receipt'></i><span>Hóa đơn định kỳ</span></a></li>
                 <hr class="nav-divider">
-                <li><a href="#"><i class='bx bxs-cog'></i><span>Cài đặt</span></a></li>
+                <li><a href="settings.php"><i class='bx bxs-cog'></i><span>Cài đặt</span></a></li>
             </ul>
         </nav>
 

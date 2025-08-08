@@ -169,7 +169,12 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
     margin-bottom: 30px;
+}
+.header-end {
+    display: flex;
+    gap: 10px;
 }
 
 .header-left h1 {
@@ -1077,3 +1082,75 @@ body.dark-mode .btn-secondary {
 body.dark-mode .btn-secondary:hover {
     background-color: #6b7280;
 }
+/* === CSS BỔ SUNG CHO TRANG MỤC TIÊU TIẾT KIỆM === */
+
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.goal-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.goal-card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.goal-card-icon {
+    font-size: 28px;
+}
+
+.goal-card-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.goal-card-body {
+    flex-grow: 1;
+    margin-bottom: 15px;
+}
+
+.goal-progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.goal-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.goal-details span {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+.goal-card-footer {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-color);
+    padding-top: 15px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+

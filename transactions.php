@@ -93,7 +93,7 @@ if ($selectedType !== 'all') {
                 <h1>Quản lý Giao dịch</h1>
                 <p class="welcome-message">Xem và quản lý tất cả giao dịch của bạn tại đây.</p>
             </div>
-             <div class="header-end">
+             <div class="header-end ">
                 <div class="header-left">
                     <button id="handle-category-btn" class="action-button primary-btn"><i class='bx bx-plus'></i> <span>Điều chỉnh danh mục</span></button>
                 </div>

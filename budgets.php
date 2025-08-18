@@ -48,7 +48,9 @@ $stmt->execute([
     'user_id' => $_SESSION['user_id'],
 ]);
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+// echo '<pre>';
+// print_r($results);
+// echo '</pre>';
 // 3. Gộp dữ liệu và ánh xạ icon
 $budgets = [];
 $transactions = [];

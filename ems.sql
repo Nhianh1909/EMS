@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.0
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Aug 08, 2025 at 06:34 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost:3306
+-- Generation Time: Aug 28, 2025 at 04:02 PM
+-- Server version: 8.0.30
+-- PHP Version: 8.2.21
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 
@@ -30,39 +30,7 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`root`@`localhost` 
-DROP PROCEDURE IF EXISTS `AddGoal`;
-
--- Tạo lại procedure với logic mới
-DELIMITER $$
-
-CREATE PROCEDURE `AddGoal`(
-    IN `p_user_id` INT, 
-    IN `p_name` VARCHAR(100), 
-    IN `p_target` DECIMAL(15,2), 
-    IN `p_moneyIn` DECIMAL(15,2), 
-    IN `p_deadline` DATE, 
-    IN `p_icon` VARCHAR(50), 
-    IN `p_color` VARCHAR(20)
-)
-BEGIN
-    DECLARE v_category_id INT;
-
-    -- 1. Tự động tạo một danh mục CHI TIÊU mới có cùng tên với mục tiêu
-    INSERT INTO categories (user_id, name, type)
-    VALUES (p_user_id, p_name, 'expense');
-
-    -- Lấy ID của danh mục vừa được tạo
-    SET v_category_id = LAST_INSERT_ID();
-
-    -- 2. Tạo mục tiêu mới và liên kết nó với danh mục vừa tạo
-    INSERT INTO goals (user_id, category_id, name, target, moneyIn, saved, deadline, icon, color)
-    VALUES (p_user_id, v_category_id, p_name, p_target, p_moneyIn, p_moneyIn, p_deadline, p_icon, p_color);
-END$$
-
-DELIMITER;
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `AddTransaction` (IN `p_user_id` INT, IN `p_category_id` INT, IN `p_amount` DECIMAL(12,2), IN `p_description` TEXT, IN `p_transaction_date` DATETIME) BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `AddTransaction` (IN `p_user_id` INT, IN `p_category_id` INT, IN `p_amount` DECIMAL(12,2), IN `p_description` TEXT, IN `p_transaction_date` DATETIME)   BEGIN
     DECLARE v_type ENUM('income', 'expense');
     DECLARE v_budget_id INT;
     DECLARE v_budget_limit DECIMAL(12,2);
@@ -105,7 +73,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `AddTransaction` (IN `p_user_id` INT
     VALUES (p_user_id, p_category_id, p_amount, p_description, p_transaction_date);
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserGoals` (IN `p_user_id` INT) BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetUserGoals` (IN `p_user_id` INT)   BEGIN
     SELECT
         g.*,
         ROUND((g.saved / g.target) * 100, 2) AS percentage
@@ -122,13 +90,13 @@ DELIMITER;
 --
 
 CREATE TABLE `budgets` (
-    `id` int(11) NOT NULL,
-    `user_id` int(11) NOT NULL,
-    `category_id` int(11) NOT NULL,
+    `id` int NOT NULL,
+    `user_id` int NOT NULL,
+    `category_id` int NOT NULL,
     `amount` decimal(12, 2) NOT NULL,
     `start_date` date NOT NULL,
     `end_date` date NOT NULL,
-    `created_at` datetime DEFAULT current_timestamp()
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 --
@@ -149,7 +117,7 @@ VALUES (
         1,
         2,
         3,
-        1500000.00,
+        '1500000.00',
         '2025-07-01',
         '2025-07-31',
         '2025-07-28 13:33:33'
@@ -158,7 +126,7 @@ VALUES (
         3,
         2,
         5,
-        2000000.00,
+        '2000000.00',
         '2025-07-01',
         '2025-07-31',
         '2025-07-28 13:33:33'
@@ -167,7 +135,7 @@ VALUES (
         4,
         2,
         1,
-        20000000.00,
+        '20000000.00',
         '2025-07-01',
         '2025-07-31',
         '2025-07-28 13:33:33'
@@ -176,91 +144,37 @@ VALUES (
         5,
         2,
         2,
-        5000000.00,
+        '5000000.00',
         '2025-07-01',
         '2025-07-31',
         '2025-07-28 13:33:33'
-    ),
-    (
-        6,
-        4,
-        8,
-        1000000.00,
-        '2025-07-01',
-        '2025-07-31',
-        '2025-07-28 13:33:33'
-    ),
-    (
-        7,
-        4,
-        9,
-        500000.00,
-        '2025-07-01',
-        '2025-07-31',
-        '2025-07-28 13:33:33'
-    ),
-    (
-        8,
-        4,
-        10,
-        3000000.00,
-        '2025-07-01',
-        '2025-07-31',
-        '2025-07-28 13:33:33'
-    ),
-    (
-        9,
-        4,
-        6,
-        7000000.00,
-        '2025-07-01',
-        '2025-07-31',
-        '2025-07-28 13:33:33'
-    ),
-    (
-        10,
-        4,
-        7,
-        4000000.00,
-        '2025-07-01',
-        '2025-07-31',
-        '2025-07-28 13:33:33'
-    ),
-    (
-        11,
-        4,
-        8,
-        500000000.00,
-        '2025-08-06',
-        '2025-09-06',
-        '2025-08-06 13:31:26'
-    ),
-    (
-        12,
-        4,
-        9,
-        10000000.00,
-        '2025-08-06',
-        '2025-09-06',
-        '2025-08-06 13:35:05'
-    ),
-    (
-        13,
-        4,
-        10,
-        10000000.00,
-        '2025-08-06',
-        '2025-09-13',
-        '2025-08-06 13:40:20'
     ),
     (
         14,
         2,
         4,
-        1000000.00,
+        '1000000.00',
         '2025-08-06',
         '2025-08-30',
         '2025-08-06 13:42:53'
+    ),
+    (
+        15,
+        4,
+        8,
+        '500000.00',
+        '2025-08-01',
+        '2025-08-31',
+        '2025-08-18 20:19:04'
+    ),
+    (
+        16,
+        4,
+        9,
+        '9900000.00',
+        '2025-08-01',
+        '2025-08-31',
+        '2025-08-18 20:19:23'
     );
 
 -- --------------------------------------------------------
@@ -270,12 +184,12 @@ VALUES (
 --
 
 CREATE TABLE `categories` (
-    `id` int(11) NOT NULL,
-    `user_id` int(11) NOT NULL,
-    `name` varchar(100) NOT NULL,
-    `type` enum('income', 'expense') NOT NULL,
-    `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
-    `created_at` datetime DEFAULT current_timestamp()
+    `id` int NOT NULL,
+    `user_id` int NOT NULL,
+    `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+    `type` enum('income', 'expense') COLLATE utf8mb4_general_ci NOT NULL,
+    `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 --
@@ -334,7 +248,7 @@ VALUES (
     (
         6,
         4,
-        'Thu nhập freelance',
+        'Thu nhập freelances',
         'income',
         0,
         '2025-07-28 13:33:33'
@@ -379,16 +293,16 @@ VALUES (
 --
 
 CREATE TABLE `goals` (
-    `id` int(11) NOT NULL,
-    `user_id` int(11) NOT NULL,
-    `category_id` int(11) NOT NULL,
-    `name` varchar(100) NOT NULL,
+    `id` int NOT NULL,
+    `user_id` int NOT NULL,
+    `name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
     `target` decimal(15, 2) NOT NULL,
-    `saved` decimal(15, 2) NOT NULL DEFAULT 0.00,
+    `moneyIn` decimal(15, 2) NOT NULL DEFAULT '0.00',
+    `saved` decimal(15, 2) NOT NULL DEFAULT '0.00',
     `deadline` date DEFAULT NULL,
-    `icon` varchar(50) DEFAULT 'bx-target-lock',
-    `color` varchar(20) DEFAULT '#1a202c',
-    `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+    `icon` varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'bx-target-lock',
+    `color` varchar(20) COLLATE utf8mb4_general_ci DEFAULT '#1a202c',
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 --
@@ -399,9 +313,9 @@ INSERT INTO
     `goals` (
         `id`,
         `user_id`,
-        `category_id`,
         `name`,
         `target`,
+        `moneyIn`,
         `saved`,
         `deadline`,
         `icon`,
@@ -411,10 +325,10 @@ INSERT INTO
 VALUES (
         1,
         2,
-        5,
         'Du lịch Nhật Bản',
-        20000000.00,
-        0.00,
+        '20000000.00',
+        '0.00',
+        '0.00',
         '2025-12-31',
         'bxs-plane-alt',
         '#ef4444',
@@ -423,10 +337,10 @@ VALUES (
     (
         2,
         2,
-        7,
         'Mua MacBook',
-        35000000.00,
-        0.00,
+        '35000000.00',
+        '0.00',
+        '0.00',
         '2025-10-01',
         'bxl-apple',
         '#1a202c',
@@ -435,10 +349,10 @@ VALUES (
     (
         3,
         2,
-        8,
         'Quỹ khẩn cấp',
-        10000000.00,
-        0.00,
+        '10000000.00',
+        '0.00',
+        '0.00',
         NULL,
         'bx-money',
         '#15803d',
@@ -447,14 +361,72 @@ VALUES (
     (
         5,
         2,
-        1,
         'Mua nhà ',
-        100000000.00,
-        -15000000.00,
+        '100000000.00',
+        '0.00',
+        '-15000000.00',
         '2025-08-29',
         'bx-target-lock',
         '#3498db',
         '2025-08-08 16:23:17'
+    ),
+    (
+        12,
+        4,
+        'Mua xe đạp',
+        '500000.00',
+        '0.00',
+        '500335.00',
+        '2025-08-29',
+        'bx-target-lock',
+        '#3498db',
+        '2025-08-28 15:17:10'
+    ),
+    (
+        13,
+        4,
+        'Mua xe hơi',
+        '10000000.00',
+        '0.00',
+        '1000000.00',
+        '2025-08-31',
+        'bx-target-lock',
+        '#3498db',
+        '2025-08-28 16:01:24'
+    );
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `monthly_surplus`
+--
+
+CREATE TABLE `monthly_surplus` (
+    `id` int NOT NULL,
+    `user_id` int NOT NULL,
+    `month` char(7) NOT NULL,
+    `surplus` decimal(15, 2) NOT NULL DEFAULT '0.00',
+    `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `monthly_surplus`
+--
+
+INSERT INTO
+    `monthly_surplus` (
+        `id`,
+        `user_id`,
+        `month`,
+        `surplus`,
+        `updated_at`
+    )
+VALUES (
+        1,
+        4,
+        '2025-08',
+        '493249665.00',
+        '2025-08-28 16:01:29'
     );
 
 -- --------------------------------------------------------
@@ -464,13 +436,13 @@ VALUES (
 --
 
 CREATE TABLE `statistics` (
-    `id` int(11) NOT NULL,
-    `user_id` int(11) NOT NULL,
-    `type` enum('income', 'expense') NOT NULL,
-    `period_type` enum('day', 'month', 'year') NOT NULL,
-    `period_value` varchar(20) NOT NULL,
+    `id` int NOT NULL,
+    `user_id` int NOT NULL,
+    `type` enum('income', 'expense') COLLATE utf8mb4_general_ci NOT NULL,
+    `period_type` enum('day', 'month', 'year') COLLATE utf8mb4_general_ci NOT NULL,
+    `period_value` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
     `total_amount` decimal(12, 2) NOT NULL,
-    `created_at` datetime DEFAULT current_timestamp()
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 --
@@ -493,7 +465,7 @@ VALUES (
         'income',
         'month',
         '2025-07',
-        2000000.00,
+        '2000000.00',
         '2025-07-28 13:33:33'
     ),
     (
@@ -502,7 +474,7 @@ VALUES (
         'expense',
         'month',
         '2025-07',
-        870000.00,
+        '870000.00',
         '2025-07-28 13:33:33'
     ),
     (
@@ -511,7 +483,7 @@ VALUES (
         'income',
         'month',
         '2025-07',
-        8000000.00,
+        '8000000.00',
         '2025-07-28 13:33:33'
     ),
     (
@@ -520,7 +492,7 @@ VALUES (
         'expense',
         'month',
         '2025-07',
-        3400000.00,
+        '3400000.00',
         '2025-07-28 13:33:33'
     );
 
@@ -531,13 +503,13 @@ VALUES (
 --
 
 CREATE TABLE `transactions` (
-    `id` int(11) NOT NULL,
-    `user_id` int(11) NOT NULL,
-    `category_id` int(11) NOT NULL,
+    `id` int NOT NULL,
+    `user_id` int NOT NULL,
+    `category_id` int NOT NULL,
     `amount` decimal(12, 2) NOT NULL,
-    `description` text DEFAULT NULL,
+    `description` text COLLATE utf8mb4_general_ci,
     `transaction_date` datetime NOT NULL,
-    `created_at` datetime DEFAULT current_timestamp()
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 --
@@ -558,7 +530,7 @@ VALUES (
         2,
         2,
         2,
-        2000000.00,
+        '2000000.00',
         'Thưởng tháng',
         '2025-07-05 10:00:00',
         '2025-07-28 13:33:33'
@@ -567,7 +539,7 @@ VALUES (
         3,
         2,
         3,
-        120000.00,
+        '120000.00',
         'Ăn trưa KFC',
         '2025-07-07 12:00:00',
         '2025-07-28 13:33:33'
@@ -576,7 +548,7 @@ VALUES (
         4,
         2,
         4,
-        50000.00,
+        '50000.00',
         'Grab đi làm',
         '2025-07-08 08:00:00',
         '2025-07-28 13:33:33'
@@ -585,7 +557,7 @@ VALUES (
         5,
         2,
         5,
-        700000.00,
+        '700000.00',
         'Mua đồ Shopee',
         '2025-07-10 20:00:00',
         '2025-07-28 13:33:33'
@@ -594,7 +566,7 @@ VALUES (
         6,
         4,
         6,
-        5000000.00,
+        '5000000.00',
         'Dự án content',
         '2025-07-03 09:00:00',
         '2025-07-28 13:33:33'
@@ -603,7 +575,7 @@ VALUES (
         7,
         4,
         7,
-        3000000.00,
+        '3000000.00',
         'Gia sư tiếng Anh',
         '2025-07-06 15:00:00',
         '2025-07-28 13:33:33'
@@ -612,7 +584,7 @@ VALUES (
         8,
         4,
         8,
-        900000.00,
+        '900000.00',
         'Tiền điện',
         '2025-07-07 18:00:00',
         '2025-07-28 13:33:33'
@@ -621,7 +593,7 @@ VALUES (
         9,
         4,
         9,
-        200000.00,
+        '200000.00',
         'Xem phim',
         '2025-07-09 19:00:00',
         '2025-07-28 13:33:33'
@@ -630,7 +602,7 @@ VALUES (
         10,
         4,
         10,
-        2500000.00,
+        '2500000.00',
         'Trả tiền thuê nhà',
         '2025-07-11 09:00:00',
         '2025-07-28 13:33:33'
@@ -639,7 +611,7 @@ VALUES (
         11,
         4,
         8,
-        -25000.00,
+        '-25000.00',
         'Đóng tiền điện',
         '2025-07-28 00:00:00',
         '2025-07-28 22:06:44'
@@ -648,7 +620,7 @@ VALUES (
         12,
         4,
         7,
-        30000000.00,
+        '30000000.00',
         'Dậy bé lớp 10',
         '2025-07-28 00:00:00',
         '2025-07-28 22:08:03'
@@ -657,7 +629,7 @@ VALUES (
         13,
         4,
         8,
-        400000.00,
+        '400000.00',
         '',
         '2025-08-06 00:00:00',
         '2025-08-06 13:33:26'
@@ -666,7 +638,7 @@ VALUES (
         14,
         4,
         9,
-        1000000.00,
+        '1000000.00',
         '',
         '2025-08-14 00:00:00',
         '2025-08-06 13:35:21'
@@ -675,7 +647,7 @@ VALUES (
         15,
         4,
         10,
-        5000000.00,
+        '5000000.00',
         '',
         '2025-08-06 00:00:00',
         '2025-08-06 13:40:38'
@@ -684,11 +656,153 @@ VALUES (
         16,
         2,
         4,
-        500000.00,
+        '500000.00',
         '',
         '2025-08-06 00:00:00',
         '2025-08-06 13:43:04'
+    ),
+    (
+        17,
+        4,
+        6,
+        '500000000.00',
+        '',
+        '2025-08-18 00:00:00',
+        '2025-08-18 20:35:22'
+    ),
+    (
+        21,
+        4,
+        7,
+        '50000.00',
+        '',
+        '2025-08-18 00:00:00',
+        '2025-08-18 21:13:18'
+    ),
+    (
+        22,
+        4,
+        7,
+        '1000000.00',
+        '',
+        '2025-08-18 00:00:00',
+        '2025-08-18 21:13:36'
+    ),
+    (
+        23,
+        4,
+        7,
+        '100000.00',
+        '',
+        '2025-08-18 00:00:00',
+        '2025-08-18 21:13:55'
     );
+
+--
+-- Triggers `transactions`
+--
+DELIMITER $$
+
+CREATE TRIGGER `after_delete_transaction` AFTER DELETE ON `transactions` FOR EACH ROW BEGIN
+  DECLARE v_type VARCHAR(20);
+  DECLARE v_period VARCHAR(20);
+  DECLARE v_budget DECIMAL(12,2);
+  DECLARE v_start DATE;
+  DECLARE v_end DATE;
+  DECLARE v_spent DECIMAL(12,2);
+
+  SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
+  SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
+
+  UPDATE statistics
+  SET total_amount = total_amount - OLD.amount
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period;
+
+  DELETE FROM statistics
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period
+    AND total_amount <= 0;
+
+  IF v_type = 'expense' THEN
+    SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
+    FROM budgets
+    WHERE user_id = OLD.user_id AND category_id = OLD.category_id
+      AND start_date <= OLD.transaction_date AND end_date >= OLD.transaction_date
+    LIMIT 1;
+
+    IF v_budget IS NOT NULL THEN
+      SELECT COALESCE(SUM(amount), 0) INTO v_spent
+      FROM transactions
+      WHERE user_id = OLD.user_id AND category_id = OLD.category_id
+        AND transaction_date BETWEEN v_start AND v_end;
+    END IF;
+  END IF;
+END
+$$
+
+DELIMITER;
+
+DELIMITER $$
+
+CREATE TRIGGER `after_update_transaction` AFTER UPDATE ON `transactions` FOR EACH ROW BEGIN
+  DECLARE v_type VARCHAR(20);
+  DECLARE v_period VARCHAR(20);
+  DECLARE v_budget DECIMAL(12,2);
+  DECLARE v_start DATE;
+  DECLARE v_end DATE;
+  DECLARE v_spent DECIMAL(12,2);
+
+  SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
+  SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
+
+  UPDATE statistics
+  SET total_amount = total_amount - OLD.amount
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period;
+
+  DELETE FROM statistics
+  WHERE user_id = OLD.user_id AND type = v_type
+    AND period_type = 'month' AND period_value = v_period
+    AND total_amount <= 0;
+
+  IF v_type = 'expense' THEN
+    SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
+    FROM budgets
+    WHERE user_id = OLD.user_id AND category_id = OLD.category_id
+      AND start_date <= OLD.transaction_date AND end_date >= OLD.transaction_date
+    LIMIT 1;
+
+    IF v_budget IS NOT NULL THEN
+      SELECT COALESCE(SUM(amount), 0) INTO v_spent
+      FROM transactions
+      WHERE user_id = OLD.user_id AND category_id = OLD.category_id
+        AND transaction_date BETWEEN v_start AND v_end;
+    END IF;
+  END IF;
+END
+$$
+
+DELIMITER;
+
+DELIMITER $$
+
+CREATE TRIGGER `trg_delete_transaction` AFTER DELETE ON `transactions` FOR EACH ROW BEGIN
+    DECLARE v_goal_id INT;
+    SELECT id INTO v_goal_id
+    FROM goals
+    WHERE category_id = OLD.category_id AND user_id = OLD.user_id
+    LIMIT 1;
+
+    IF v_goal_id IS NOT NULL AND OLD.amount > 0 THEN
+        UPDATE goals
+        SET saved = saved - OLD.amount
+        WHERE id = v_goal_id;
+    END IF;
+END
+$$
+
+DELIMITER;
 
 -- --------------------------------------------------------
 
@@ -697,12 +811,12 @@ VALUES (
 --
 
 CREATE TABLE `users` (
-    `id` int(11) NOT NULL,
-    `username` varchar(50) NOT NULL,
-    `email` varchar(100) NOT NULL,
-    `password` varchar(255) NOT NULL,
-    `created_at` datetime DEFAULT current_timestamp(),
-    `avatar` longblob DEFAULT NULL
+    `id` int NOT NULL,
+    `username` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+    `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+    `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+    `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+    `avatar` longblob
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 --
@@ -732,7 +846,7 @@ VALUES (
         'nguyenvana@gmail.com',
         '$2y$10$GIQSnv7urQ1oHBAPml8xBO1KwBljHjqDADnFPtblh28GRkQ59W1V6',
         '2025-07-28 16:21:01',
-        0x363838373431303739353839665f5f5f5f6e685f5f5f5f5f5f695f64695f5f5f6e2e6a7067
+        0x363862303532363830643835625f736e65616b65725472616e672e6a7067
     ),
     (
         5,
@@ -814,158 +928,7 @@ VALUES (
         '2025-07-28 13:33:33',
         NULL
     );
--- Triggers `transactions`
---
-DELIMITER $$
 
-CREATE TRIGGER `after_delete_transaction` AFTER DELETE ON `transactions` FOR EACH ROW BEGIN
-  DECLARE v_type VARCHAR(20);
-  DECLARE v_period VARCHAR(20);
-  DECLARE v_budget DECIMAL(12,2);
-  DECLARE v_start DATE;
-  DECLARE v_end DATE;
-  DECLARE v_spent DECIMAL(12,2);
-
-  SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
-  SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
-
-  UPDATE statistics
-  SET total_amount = total_amount - OLD.amount
-  WHERE user_id = OLD.user_id AND type = v_type
-    AND period_type = 'month' AND period_value = v_period;
-
-  DELETE FROM statistics
-  WHERE user_id = OLD.user_id AND type = v_type
-    AND period_type = 'month' AND period_value = v_period
-    AND total_amount <= 0;
-
-  IF v_type = 'expense' THEN
-    SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
-    FROM budgets
-    WHERE user_id = OLD.user_id AND category_id = OLD.category_id
-      AND start_date <= OLD.transaction_date AND end_date >= OLD.transaction_date
-    LIMIT 1;
-
-    IF v_budget IS NOT NULL THEN
-      SELECT COALESCE(SUM(amount), 0) INTO v_spent
-      FROM transactions
-      WHERE user_id = OLD.user_id AND category_id = OLD.category_id
-        AND transaction_date BETWEEN v_start AND v_end;
-    END IF;
-  END IF;
-
-END
-$$
-
-DELIMITER;
-
-DELIMITER $$
-
-CREATE TRIGGER `after_update_transaction` AFTER UPDATE ON `transactions` FOR EACH ROW BEGIN
-  DECLARE v_type VARCHAR(20);
-  DECLARE v_period VARCHAR(20);
-  DECLARE v_budget DECIMAL(12,2);
-  DECLARE v_start DATE;
-  DECLARE v_end DATE;
-  DECLARE v_spent DECIMAL(12,2);
-
-  SELECT type INTO v_type FROM categories WHERE id = OLD.category_id;
-  SET v_period = DATE_FORMAT(OLD.transaction_date, '%Y-%m');
-
-  UPDATE statistics
-  SET total_amount = total_amount - OLD.amount
-  WHERE user_id = OLD.user_id AND type = v_type
-    AND period_type = 'month' AND period_value = v_period;
-
-  DELETE FROM statistics
-  WHERE user_id = OLD.user_id AND type = v_type
-    AND period_type = 'month' AND period_value = v_period
-    AND total_amount <= 0;
-
-  IF v_type = 'expense' THEN
-    SELECT amount, start_date, end_date INTO v_budget, v_start, v_end
-    FROM budgets
-    WHERE user_id = OLD.user_id AND category_id = OLD.category_id
-      AND start_date <= OLD.transaction_date AND end_date >= OLD.transaction_date
-    LIMIT 1;
-
-    IF v_budget IS NOT NULL THEN
-      SELECT COALESCE(SUM(amount), 0) INTO v_spent
-      FROM transactions
-      WHERE user_id = OLD.user_id AND category_id = OLD.category_id
-        AND transaction_date BETWEEN v_start AND v_end;
-    END IF;
-  END IF;
-
-END
-$$
-
-DELIMITER;
-
-DELIMITER $$
-
-CREATE TRIGGER `trg_add_transaction` AFTER INSERT ON `transactions` FOR EACH ROW BEGIN
-    DECLARE v_goal_id INT;
-    SELECT id INTO v_goal_id
-    FROM goals
-    WHERE category_id = NEW.category_id AND user_id = NEW.user_id
-    LIMIT 1;
-
-    IF v_goal_id IS NOT NULL AND NEW.amount > 0 THEN
-        UPDATE goals
-        SET saved = saved + NEW.amount
-        WHERE id = v_goal_id;
-    END IF;
-END
-$$
-
-DELIMITER;
-
-DELIMITER $$
-
-CREATE TRIGGER `trg_delete_transaction` AFTER DELETE ON `transactions` FOR EACH ROW BEGIN
-    DECLARE v_goal_id INT;
-    SELECT id INTO v_goal_id
-    FROM goals
-    WHERE category_id = OLD.category_id AND user_id = OLD.user_id
-    LIMIT 1;
-
-    IF v_goal_id IS NOT NULL AND OLD.amount > 0 THEN
-        UPDATE goals
-        SET saved = saved - OLD.amount
-        WHERE id = v_goal_id;
-    END IF;
-END
-$$
-
-DELIMITER;
-
-DELIMITER $$
-
-CREATE TRIGGER `trg_update_transaction` AFTER UPDATE ON `transactions` FOR EACH ROW BEGIN
-    DECLARE v_goal_id INT;
-    SELECT id INTO v_goal_id
-    FROM goals
-    WHERE category_id = NEW.category_id AND user_id = NEW.user_id
-    LIMIT 1;
-
-    IF v_goal_id IS NOT NULL THEN
-        IF OLD.amount > 0 THEN
-            UPDATE goals
-            SET saved = saved - OLD.amount
-            WHERE id = v_goal_id;
-        END IF;
-
-        IF NEW.amount > 0 THEN
-            UPDATE goals
-            SET saved = saved + NEW.amount
-            WHERE id = v_goal_id;
-        END IF;
-    END IF;
-END
-$$
-
-DELIMITER;
 --
 -- Indexes for dumped tables
 --
@@ -995,8 +958,14 @@ ADD KEY `user_id` (`user_id`);
 --
 ALTER TABLE `goals`
 ADD PRIMARY KEY (`id`),
-ADD KEY `user_id` (`user_id`),
-ADD KEY `category_id` (`category_id`);
+ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `monthly_surplus`
+--
+ALTER TABLE `monthly_surplus`
+ADD PRIMARY KEY (`id`),
+ADD UNIQUE KEY `user_id` (`user_id`, `month`);
 
 --
 -- Indexes for table `statistics`
@@ -1029,42 +998,49 @@ ADD UNIQUE KEY `email` (`email`);
 -- AUTO_INCREMENT for table `budgets`
 --
 ALTER TABLE `budgets`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-AUTO_INCREMENT = 15;
+MODIFY `id` int NOT NULL AUTO_INCREMENT,
+AUTO_INCREMENT = 17;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-AUTO_INCREMENT = 11;
+MODIFY `id` int NOT NULL AUTO_INCREMENT,
+AUTO_INCREMENT = 14;
 
 --
 -- AUTO_INCREMENT for table `goals`
 --
 ALTER TABLE `goals`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-AUTO_INCREMENT = 6;
+MODIFY `id` int NOT NULL AUTO_INCREMENT,
+AUTO_INCREMENT = 14;
+
+--
+-- AUTO_INCREMENT for table `monthly_surplus`
+--
+ALTER TABLE `monthly_surplus`
+MODIFY `id` int NOT NULL AUTO_INCREMENT,
+AUTO_INCREMENT = 2;
 
 --
 -- AUTO_INCREMENT for table `statistics`
 --
 ALTER TABLE `statistics`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
+MODIFY `id` int NOT NULL AUTO_INCREMENT,
 AUTO_INCREMENT = 5;
 
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
-AUTO_INCREMENT = 17;
+MODIFY `id` int NOT NULL AUTO_INCREMENT,
+AUTO_INCREMENT = 24;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,
+MODIFY `id` int NOT NULL AUTO_INCREMENT,
 AUTO_INCREMENT = 15;
 
 --
@@ -1088,8 +1064,7 @@ ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`
 -- Constraints for table `goals`
 --
 ALTER TABLE `goals`
-ADD CONSTRAINT `goals_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-ADD CONSTRAINT `goals_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE;
+ADD CONSTRAINT `goals_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `statistics`

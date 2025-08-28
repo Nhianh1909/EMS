@@ -15,6 +15,7 @@ if (!$user_id) {
 // =================================================================
 if ($action === 'add') {
     // Không cần category_id từ form nữa
+    $category_id = $_POST['category_id'] ?? null;
     $name = trim($_POST['name'] ?? '');
     $target = $_POST['target'] ?? 0;
     $moneyIn = $_POST['moneyIn'] ?? 0;
@@ -25,15 +26,19 @@ if ($action === 'add') {
     if (empty($name) || !is_numeric($target) || $target <= 0) {
         $_SESSION['error_message'] = "Vui lòng điền tên và số tiền mục tiêu hợp lệ.";
     } else {
-        // Gọi procedure mới (ít tham số hơn)
-        $stmt = $conn->prepare("CALL AddGoal(?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO goals (user_id, name, target, moneyIn, deadline, icon, color) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)");
+        
         $stmt->execute([$user_id, $name, $target, $moneyIn, $deadline, $icon, $color]);
         $_SESSION['success_message'] = "Đã thêm mục tiêu '" . htmlspecialchars($name) . "' thành công!";
     }
 }
 
 // =================================================================
-// HÀNH ĐỘNG 2: GÓP TIỀN VÀO MỤC TIÊU (LOGIC MỚI)
+// HÀNH ĐỘNG 2: GÓP TIỀN VÀO MỤC TIÊU (LOGIC MỚI - ĐÃ SỬA)
+// =================================================================
+// =================================================================
+// HÀNH ĐỘNG 2: GÓP TIỀN VÀO MỤC TIÊU (LOGIC MỚI - DÙNG monthly_surplus)
 // =================================================================
 elseif ($action === 'contribute') {
     $goal_id = $_POST['goal_id'] ?? null;
@@ -45,39 +50,43 @@ elseif ($action === 'contribute') {
         try {
             $conn->beginTransaction();
 
-            // 1. Lấy tên của mục tiêu từ goal_id
-            $stmtGoalName = $conn->prepare("SELECT name FROM goals WHERE id = ? AND user_id = ?");
-            $stmtGoalName->execute([$goal_id, $user_id]);
-            $goal = $stmtGoalName->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$goal) {
-                throw new Exception("Không tìm thấy mục tiêu.");
+            $currentMonth = date('Y-m');
+
+            // Lấy dòng tiền dư hiện tại từ bảng monthly_surplus
+            $stmt = $conn->prepare("
+                SELECT surplus 
+                FROM monthly_surplus 
+                WHERE user_id = ? AND month = ?
+            ");
+            $stmt->execute([$user_id, $currentMonth]);
+            $monthlySurplus = $stmt->fetchColumn();
+
+            if ($monthlySurplus === false) {
+                throw new Exception("Chưa có dữ liệu dòng tiền dư cho tháng này.");
             }
-            $goalName = $goal['name'];
 
-            // 2. Tìm danh mục CHI TIÊU có cùng tên với mục tiêu
-            $stmtCategory = $conn->prepare("SELECT id FROM categories WHERE user_id = ? AND name = ? AND type = 'expense'");
-            $stmtCategory->execute([$user_id, $goalName]);
-            $savingCategory = $stmtCategory->fetch(PDO::FETCH_ASSOC);
-
-            if (!$savingCategory) {
-                throw new Exception("Lỗi không tìm thấy danh mục chi tiêu tương ứng với mục tiêu. Vui lòng thử xóa và tạo lại mục tiêu.");
+            if ($amount > $monthlySurplus) {
+                throw new Exception("Không đủ dòng tiền dư để góp.");
             }
-            $savingCategoryId = $savingCategory['id'];
 
-            // 3. Cập nhật số tiền đã tiết kiệm
-            $stmtUpdateGoal = $conn->prepare("UPDATE goals SET saved = saved + ? WHERE id = ? AND user_id = ?");
+            // Cập nhật số tiền đã tiết kiệm cho goal
+            $stmtUpdateGoal = $conn->prepare("
+                UPDATE goals 
+                SET saved = saved + ? 
+                WHERE id = ? AND user_id = ?
+            ");
             $stmtUpdateGoal->execute([$amount, $goal_id, $user_id]);
 
-            // 4. Tạo giao dịch chi tiêu mới
-            $description = "Góp tiền cho mục tiêu: " . $goalName;
-            $stmtCreateTransaction = $conn->prepare(
-                "INSERT INTO transactions (user_id, category_id, amount, description, transaction_date) VALUES (?, ?, ?, ?, NOW())"
-            );
-            $stmtCreateTransaction->execute([$user_id, $savingCategoryId, $amount, $description]);
+            // Trừ trực tiếp dòng tiền dư trong monthly_surplus
+            $stmtUpdateSurplus = $conn->prepare("
+                UPDATE monthly_surplus 
+                SET surplus = surplus - ? 
+                WHERE user_id = ? AND month = ?
+            ");
+            $stmtUpdateSurplus->execute([$amount, $user_id, $currentMonth]);
 
             $conn->commit();
-            $_SESSION['success_message'] = "Góp " . number_format($amount) . "đ vào mục tiêu '" . htmlspecialchars($goalName) . "' thành công!";
+            $_SESSION['success_message'] = "Góp " . number_format($amount) . "đ vào mục tiêu thành công!";
 
         } catch (Exception $e) {
             $conn->rollBack();
@@ -85,6 +94,7 @@ elseif ($action === 'contribute') {
         }
     }
 }
+
 
 // =================================================================
 // HÀNH ĐỘNG 3: XÓA MỘT MỤC TIÊU

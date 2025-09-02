@@ -22,4 +22,3 @@ $stmt->execute([$user_id, $category_id, $name, $target, $deadline, $icon, $color
 header("Location: goals.php");
 exit;
 ?>
-

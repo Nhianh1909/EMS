@@ -20,8 +20,9 @@ error_reporting(E_ALL);
 <body>
     <div class="auth-container">
         <!-- Phần bên trái chứa ảnh minh họa -->
-        <div class="auth-left-panel">
-            <img src="https://placehold.co/500x500/E0F7FA/333333?text=Hinh+Minh+Hoa\n(signup-illustration.svg)" alt="Hình minh họa Đăng ký" class="auth-illustration">
+        <div class="auth-left-panel d-none d-md-flex col-md-6 justify-content-center align-items-center">
+            <img src="./assets/login_avatar.jpg" alt="Login Illustration" style="max-width:80%; max-height:400px; height:auto; width:auto; object-fit:contain; border-radius:12px;">
+
         </div>
 
         <!-- Phần bên phải chứa form đăng ký -->
@@ -55,27 +56,20 @@ error_reporting(E_ALL);
                     </div>
 
                     <!-- Nhóm nhập liệu cho Mật khẩu -->
-                    <div class="form-group">
-                        <img src="https://placehold.co/24x24/FFFFFF/999999?text=🔒" alt="Password Icon" class="form-icon">
-                        <input type="password" name="password" placeholder="Enter Password" required>
-                    </div>
-
-                    <!-- Nhóm nhập liệu cho Xác nhận Mật khẩu -->
-                    <div class="form-group">
-                        <img src="https://placehold.co/24x24/FFFFFF/999999?text=🔒" alt="Confirm Password Icon" class="form-icon">
-                        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-                    </div>
-
-                    <!-- Tùy chọn Đồng ý điều khoản -->
-                    <div class="form-options">
-                        <div class="remember-me">
-                            <input type="checkbox" id="terms" name="terms" required>
-                            <label for="terms">I agree to all terms</label>
+                        <div class="form-group">
+                            <img src="https://placehold.co/24x24/FFFFFF/999999?text=🔒" alt="Password Icon" class="form-icon">
+                            <input type="password" id="password" name="password" placeholder="Enter Password" required>
                         </div>
-                    </div>
 
-                    <!-- Nút Đăng ký -->
-                    <button type="submit" class="auth-button">Register</button>
+                        <!-- Nhóm nhập liệu cho Xác nhận Mật khẩu -->
+                        <div class="form-group">
+                            <img src="https://placehold.co/24x24/FFFFFF/999999?text=🔒" alt="Confirm Password Icon" class="form-icon">
+                            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
+                        </div>
+
+                        <!-- Nút Đăng ký -->
+                        <button type="submit" class="auth-button">Register</button>
+
                 </form>
 
                 <!-- Link chuyển sang trang Đăng nhập -->
@@ -87,3 +81,14 @@ error_reporting(E_ALL);
     </div>
 </body>
 </html>
+<script>
+document.querySelector(".register-form").addEventListener("submit", function(e) {
+    const password = document.getElementById("password").value;
+    const confirm  = document.getElementById("confirm_password").value;
+
+    if (password !== confirm) {
+        e.preventDefault(); // chặn gửi form
+        alert("❌ Password và Confirm Password không khớp!");
+    }
+});
+</script>

@@ -136,7 +136,7 @@ if ($total_sum > 0) {
                     <input type="text" placeholder="Tìm kiếm giao dịch...">
                 </div>
                 <button class="action-button"><i class='bx bx-bell'></i></button>
-                <button class="action-button primary-btn"><i class='bx bx-plus'></i> <span>Thêm giao dịch</span></button>
+                
             </div>
         </header>
 

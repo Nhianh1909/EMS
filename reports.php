@@ -24,6 +24,8 @@ switch($filter){
                   AND MONTH(t.transaction_date) = MONTH(CURDATE())";
         break;
 }
+
+
 //truy vấn biến $report_summary để lấy ra tổng thu và tổng chi tiêu 
 $report_summary = $conn->prepare(
     "SELECT SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END) AS total_income,
@@ -39,6 +41,9 @@ $report_summary = $report_summary->fetch(PDO::FETCH_ASSOC);
 $total_income = $report_summary['total_income'] ?? 0;
 $total_expense = $report_summary['total_expense'] ?? 0;
 $net_income = $total_income - $total_expense;
+
+
+
 
 // Dữ liệu cho biểu đồ cột (Thu nhập vs Chi tiêu)
 // $income_expense_data = [

@@ -806,6 +806,25 @@ DELIMITER;
 
 -- --------------------------------------------------------
 
+DELIMITER $$
+
+CREATE TRIGGER `trg_delete_goals` AFTER DELETE ON `goals` FOR EACH ROW BEGIN
+    DECLARE v_goal_id INT;
+    SELECT id INTO v_goal_id
+    FROM goals
+    WHERE v_goal_id = OLD.id AND user_id = OLD.user_id
+    LIMIT 1;
+
+    IF v_goal_id IS NOT NULL AND OLD.saved > 0 THEN
+        UPDATE monthly_surplus
+        SET surplus = surplus + OLD.saved
+        WHERE id = v_goal_id;
+    END IF;
+END
+$$
+
+DELIMITER;
+
 --
 -- Table structure for table `users`
 --

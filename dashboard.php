@@ -8,80 +8,120 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$current_month = '2025-07';
+// $current_month = '2025-07';
+// Lấy tháng hiện tại theo định dạng YYYY-MM
+$current_month = date('Y-m');
 
-// // Lấy thông tin người dùng (username)
-// $sqlUser = "SELECT username FROM users WHERE id = :user_id";
-// $stmt = $conn->prepare($sqlUser);
-// $stmt->execute([':user_id' => $user_id]);
-// $user_info = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Tổng thu nhập
 $sqlIncome = "SELECT COALESCE(SUM(t.amount), 0) FROM transactions t 
               JOIN categories c ON t.category_id = c.id 
-              WHERE t.user_id = :user_id AND c.type = 'income'";
+              WHERE t.user_id = :user_id AND c.type = 'income' AND DATE_FORMAT(t.transaction_date, '%Y-%m') = :current_month";
 $stmt = $conn->prepare($sqlIncome);
-$stmt->execute([':user_id' => $user_id]);
+$stmt->execute([':user_id' => $user_id, ':current_month' => $current_month]);
 $total_income = $stmt->fetchColumn();
+
+
 
 // Tổng chi tiêu
 $sqlExpense = "SELECT COALESCE(SUM(t.amount), 0) FROM transactions t 
                JOIN categories c ON t.category_id = c.id 
-               WHERE t.user_id = :user_id AND c.type = 'expense'";
+               WHERE t.user_id = :user_id AND c.type = 'expense' AND DATE_FORMAT(t.transaction_date, '%Y-%m') = :current_month";
 $stmt = $conn->prepare($sqlExpense);
-$stmt->execute([':user_id' => $user_id]);
+$stmt->execute([':user_id' => $user_id, ':current_month' => $current_month]);
 $total_expense = $stmt->fetchColumn();
 
 // Tổng số dư
 $balance = $total_income - $total_expense;
 
 // Chi tiêu tháng hiện tại từ bảng statistics
-$sqlMonthExpense= "SELECT SUM(total_amount) FROM statistics 
-        WHERE user_id = :user_id AND type = :type 
-        AND period_type = 'month' AND period_value = :period_value";
-$stmt = $conn->prepare($sqlMonthExpense);
-$stmt->execute([
-    ':user_id' => $user_id,
-    ':type' => 'expense',
-    ':period_value' => $current_month
-]);
-$monthly_expense= $stmt->fetchColumn();
+// $sqlMonthExpense= "SELECT SUM(total_amount) FROM statistics 
+//         WHERE user_id = :user_id AND type = :type 
+//         AND period_type = 'month' AND period_value = :period_value";
+// $stmt = $conn->prepare($sqlMonthExpense);
+// $stmt->execute([
+//     ':user_id' => $user_id,
+//     ':type' => 'expense',
+//     ':period_value' => $current_month
+// ]);
+// $monthly_expense= $stmt->fetchColumn() ?? 0;
 // Thu nhập tháng hiện tại từ bảng statistics
-$sqlMonthIncome = "SELECT SUM(total_amount) FROM statistics 
-        WHERE user_id = :user_id AND type = :type 
-        AND period_type = 'month' AND period_value = :period_value";
-$stmt = $conn->prepare($sqlMonthIncome);
-$stmt->execute([
-    ':user_id' => $user_id,
-    ':type' => 'income',
-    ':period_value' => $current_month
-]);
-$monthly_income = $stmt->fetchColumn();
+// $sqlMonthIncome = "SELECT SUM(total_amount) FROM statistics 
+//         WHERE user_id = :user_id AND type = :type 
+//         AND period_type = 'month' AND period_value = :period_value";
+// $stmt = $conn->prepare($sqlMonthIncome);
+// $stmt->execute([
+//     ':user_id' => $user_id,
+//     ':type' => 'income',
+//     ':period_value' => $current_month
+// ]);
+// $monthly_income = $stmt->fetchColumn() ?? 0;
 
 // Giao dịch gần đây
 $sqlRecent = "SELECT t.description, c.name AS category, c.type, t.amount, t.transaction_date 
               FROM transactions t 
               JOIN categories c ON t.category_id = c.id 
               WHERE t.user_id = :user_id 
+              AND MONTH(t.transaction_date) = MONTH(CURRENT_DATE())
+                AND YEAR(t.transaction_date) = YEAR(CURRENT_DATE())
               ORDER BY t.transaction_date DESC 
-              LIMIT 4";
+              LIMIT 10";
 $stmt = $conn->prepare($sqlRecent);
 $stmt->execute([':user_id' => $user_id]);
 $recent_transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// echo "<pre>";
+// print_r($recent_transactions);
+// echo "</pre>";
+
 
 // Phân tích tổng thu nhập và chi tiêu theo tháng cho pie chart (100%)
+// $sum_query = "SELECT 
+//     SUM(CASE WHEN type = 'income' THEN total_amount ELSE 0 END) AS income_sum,
+//     SUM(CASE WHEN type = 'expense' THEN total_amount ELSE 0 END) AS expense_sum
+//     FROM statistics 
+//     WHERE user_id = :user_id AND period_type = 'month' AND period_value = :month";
+
+// $stmt = $conn->prepare($sum_query);
+// $stmt->execute([
+//     ':user_id' => $user_id,
+//     ':month' => $current_month
+// ]);
+// $sum_result = $stmt->fetch(PDO::FETCH_ASSOC) ?? 0;
+// $income_sum = $sum_result['income_sum'] ?? 0;
+// $expense_sum = $sum_result['expense_sum'] ?? 0;
+// $total_sum = $income_sum + $expense_sum;
+
+// $expense_analysis = [];
+// if ($total_sum > 0) {
+//     $expense_analysis[] = [
+//         'type' => 'income',
+//         'percentage' => round($income_sum * 100 / $total_sum, 2),
+//         'color' => '#43a047',
+//         'label' => 'Thu nhập'
+//     ];
+//     $expense_analysis[] = [
+//         'type' => 'expense',
+//         'percentage' => round($expense_sum * 100 / $total_sum, 2),
+//         'color' => '#e53935',
+//         'label' => 'Chi tiêu'
+//     ];
+// }
+// Phân tích tổng thu nhập và chi tiêu theo tháng cho pie chart (100%)
 $sum_query = "SELECT 
-    SUM(CASE WHEN type = 'income' THEN total_amount ELSE 0 END) AS income_sum,
-    SUM(CASE WHEN type = 'expense' THEN total_amount ELSE 0 END) AS expense_sum
-    FROM statistics 
-    WHERE user_id = :user_id AND period_type = 'month' AND period_value = :month";
+    SUM(CASE WHEN c.type = 'income' THEN t.amount ELSE 0 END) AS income_sum,
+    SUM(CASE WHEN c.type = 'expense' THEN t.amount ELSE 0 END) AS expense_sum
+FROM transactions t
+JOIN categories c ON t.category_id = c.id
+WHERE t.user_id = :user_id
+  AND DATE_FORMAT(t.transaction_date, '%Y-%m') = :month";
 
 $stmt = $conn->prepare($sum_query);
 $stmt->execute([
     ':user_id' => $user_id,
     ':month' => $current_month
 ]);
-$sum_result = $stmt->fetch(PDO::FETCH_ASSOC);
+$sum_result = $stmt->fetch(PDO::FETCH_ASSOC) ?? [];
+
 $income_sum = $sum_result['income_sum'] ?? 0;
 $expense_sum = $sum_result['expense_sum'] ?? 0;
 $total_sum = $income_sum + $expense_sum;
@@ -157,7 +197,7 @@ if ($total_sum > 0) {
                 </div>
                 <div class="card-info">
                     <p>Thu nhập tháng</p>
-                    <h3 class="count-up" data-value="<?php echo $monthly_income; ?>">+0đ</h3>
+                    <h3 class="count-up" data-value="<?php echo $total_income; ?>">+0đ</h3>
                 </div>
             </div>
             <div class="card animated-card magnetic-effect" style="animation-delay: 0.2s;">
@@ -166,7 +206,7 @@ if ($total_sum > 0) {
                 </div>
                 <div class="card-info">
                     <p>Chi tiêu tháng</p>
-                    <h3 class="count-up" data-value="<?php echo $monthly_expense; ?>">-0đ</h3>
+                    <h3 class="count-up" data-value="<?php echo $total_expense; ?>">-0đ</h3>
                 </div>
             </div>
         </section>
